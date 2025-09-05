@@ -1,21 +1,38 @@
-const { Pool } = require("pg");
-require("dotenv").config();
+require('dotenv').config(); // Load environment variables from .env file
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false // Needed for Neon SSL
-  }
-});
+const { createClient } = require('@supabase/supabase-js');
 
-// Test the connection
-pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database');
-});
+const SUPABASE_URL = process.env.SUPABASE_URL || process.env.REACT_APP_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || process.env.REACT_APP_ANON_KEY;
 
-pool.on('error', (err) => {
-  console.error('❌ Unexpected error on idle client', err);
-  process.exit(-1);
-});
+let supabase = null;
 
-module.exports = pool;
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error('⚠️ Supabase client not initialized. Missing SUPABASE_URL or SUPABASE_ANON_KEY in .env');
+} else {
+    supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('✅ Supabase JS client initialized.');
+
+    // Test connection by querying the 'users' table
+    (async () => {
+        try {
+            // Just try to fetch one record from the users table to test the connection
+            const { data, error } = await supabase.from('users').select('user_id').limit(1);
+
+            if (error) {
+                console.error('❌ Database connection failed:', error.message);
+            } else {
+                console.log('✅ Database connection successful!');
+                if (data && data.length > 0) {
+                    console.log(`ℹ️ Found ${data.length} user(s) in the database.`);
+                } else {
+                    console.log('ℹ️ No users found in the database yet.');
+                }
+            }
+        } catch (err) {
+            console.error('❌ Database connection failed:', err.message);
+        }
+    })();
+}
+
+module.exports = supabase;
