@@ -1,0 +1,719 @@
+Implement the followingand dont delete just add and use the same theme as on SAdminH:
+App Structure
+
+The project is named Tristar Garage Management.
+
+Use Expo Router for navigation.
+
+Theme: Dark Blue background with Red/White highlights.
+
+Use lucide-react-native for icons.
+
+Use expo-blur for glassmorphism cards.
+
+All pages must have a top bar with logo + profile icon.
+
+2. Folder Layout
+app/
+  _layout.tsx               # Root layout
+  index.tsx                 # Redirect to /dashboard
+  superadmin.tsx            # Full access dashboard
+  admin.tsx                 # Restricted dashboard
+  operator.tsx              # Operator daily input page
+  (tabs)/
+    _layout.tsx             # Bottom tabs
+    dashboard.tsx           # High-level analytics
+    clients.tsx             # Client management
+    employees.tsx           # Employee management
+    cars.tsx                # Car management
+    reports.tsx             # Summary + exports
+lib/
+  store.tsx                 # Global state with reducer
+  types.ts                  # Types for Client, Employee, Car
+  data.ts                   # Dummy seed data
+assets/
+  tristar-logo.png
+
+3. Pages
+SuperAdmin (/superadmin.tsx)
+
+Full dashboard with analytics cards (Revenue, Customers, Cars, Pending Payments).
+
+Can add/edit/remove employees.
+
+Floating action button to "Add Employee".
+
+Access all Admin + Operator dashboards.
+
+Admin (/admin.tsx)
+
+Dashboard with Today’s Revenue, Cars Serviced, Pending Payments.
+
+Can manage customers & view reports.
+
+Cannot add/remove employees or change global settings.
+
+Operator (/operator.tsx)
+
+Minimal daily input page:
+
+Add money (Money In / Money Out).
+
+Input daily customer count.
+
+Toggle cars "Working / Not Working".
+
+Toggle "Paid / Not Paid" per car.
+
+Large buttons + simple forms for quick input.
+
+Clients (/(tabs)/clients.tsx)
+
+Show cards with: profile image, name, phone, email, WhatsApp, car info, pending balance.
+
+Glassmorphism card design.
+
+Edit button → modal to update client info.
+
+Search bar + date filter at top.
+
+Employees (/(tabs)/employees.tsx)
+
+Cards with: employee photo, contact, attendance (days present/missed), total revenue generated.
+
+Edit modal to update employee info.
+
+Search bar + date filter.
+
+Cars (/(tabs)/cars.tsx)
+
+Cards showing car image, owner, booking date, service type, working status, payment status.
+
+Edit modal to update car info.
+
+Reports (/(tabs)/reports.tsx)
+
+Summaries of revenue, cars serviced, pending balances.
+
+Export button (CSV/PDF placeholder).
+
+4. Shared State (lib/store.tsx)
+
+Use React Context + Reducer.
+
+Store clients, employees, cars, and operator inputs.
+
+Export hooks like useClients(), useEmployees(), useCars().
+
+Update state on modal save.
+
+5. UI Guidelines
+
+All cards: glassmorphism style (blur background, rounded-2xl, shadow-lg).
+
+Animations: fadeIn / slideIn using react-native-reanimated.
+
+Fonts: bold white for titles, light gray for subtitles.
+
+Buttons: red with rounded-xl, white text.
+
+6. Deliverables
+
+Complete working codebase with above structure.
+
+Fully styled pages with dark garage theme.
+
+Sample data in lib/data.ts.
+
+State management integrated with edit modals.
+and here is some code provided(// =============================================
+// Tristar Garage: Implementation Pack
+// Expo SDK 53 + Expo Router + NativeWind
+// Adds: shared store, editable clients/employees/cars, operator cash, reports,
+// WhatsApp reminders, CSV export (Share), glassmorphism cards
+// =============================================
+
+// ---------- file: app/_layout.tsx ----------
+import React from 'react'
+import { Stack } from 'expo-router'
+import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import { AppProvider } from '../lib/store'
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppProvider>
+        <Stack screenOptions={{ headerShown: false }} />
+      </AppProvider>
+    </GestureHandlerRootView>
+  )
+}
+
+// ---------- file: app/(tabs)/_layout.tsx ----------
+import React from 'react'
+import { Tabs } from 'expo-router'
+import { Car, Users, UserCog, BarChart3, Home } from 'lucide-react-native'
+import { View, Text } from 'react-native'
+
+export default function TabsLayout() {
+  return (
+    <Tabs
+      screenOptions={{
+        headerShown: false,
+        tabBarStyle: { backgroundColor: '#0A0F1E', borderTopColor: '#111827' },
+        tabBarActiveTintColor: '#ef4444',
+        tabBarInactiveTintColor: '#9ca3af',
+      }}
+    >
+      <Tabs.Screen name="dashboard" options={{
+        title: 'Dashboard',
+        tabBarIcon: ({ color, size }) => <Home color={color} size={size} />,
+      }} />
+      <Tabs.Screen name="clients" options={{
+        title: 'Clients',
+        tabBarIcon: ({ color, size }) => <Users color={color} size={size} />,
+      }} />
+      <Tabs.Screen name="employees" options={{
+        title: 'Employees',
+        tabBarIcon: ({ color, size }) => <UserCog color={color} size={size} />,
+      }} />
+      <Tabs.Screen name="cars" options={{
+        title: 'Cars',
+        tabBarIcon: ({ color, size }) => <Car color={color} size={size} />,
+      }} />
+      <Tabs.Screen name="reports" options={{
+        title: 'Reports',
+        tabBarIcon: ({ color, size }) => <BarChart3 color={color} size={size} />,
+      }} />
+    </Tabs>
+  )
+}
+
+// ---------- file: app/(tabs)/dashboard.tsx ----------
+import React from 'react'
+import { View, Text, Image, ScrollView, TouchableOpacity } from 'react-native'
+import { useApp } from '../../lib/store'
+import { BlurView } from 'expo-blur'
+import { DollarSign, Users, Car, Clock, UserPlus } from 'lucide-react-native'
+import { Link } from 'expo-router'
+
+export default function Dashboard() {
+  const { totals } = useApp()
+  const stats = [
+    { id: 'rev', title: 'Total Revenue', value: `KES ${totals.revenue.toLocaleString()}`, Icon: DollarSign },
+    { id: 'cust', title: 'Total Customers', value: totals.clients.toString(), Icon: Users },
+    { id: 'cars', title: 'Cars Worked On', value: totals.carsWorked.toString(), Icon: Car },
+    { id: 'pending', title: 'Pending Payments', value: totals.pendingPayments.toString(), Icon: Clock },
+  ]
+  return (
+    <View className="flex-1 bg-[#0A0F1E] pt-14">
+      <View className="flex-row items-center justify-between px-6 mb-4">
+        <Image source={require('../../assets/tristar-logo.png')} style={{ width: 44, height: 44 }} />
+        <Text className="text-white text-xl font-bold">Tristar Garage</Text>
+      </View>
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+        {stats.map(({ id, title, value, Icon }) => (
+          <BlurView key={id} intensity={60} tint="dark" className="rounded-2xl p-5 flex-row items-center justify-between">
+            <View>
+              <Text className="text-gray-300">{title}</Text>
+              <Text className="text-2xl font-bold text-white">{value}</Text>
+            </View>
+            <Icon size={28} color="red" />
+          </BlurView>
+        ))}
+        <Link href="/(tabs)/clients" asChild>
+          <TouchableOpacity className="bg-red-600 mt-2 py-4 rounded-2xl items-center">
+            <Text className="text-white font-semibold">Manage Clients</Text>
+          </TouchableOpacity>
+        </Link>
+      </ScrollView>
+      <TouchableOpacity onPress={() => {/* open add employee modal via clients/employees screen */}}
+        className="absolute bottom-8 right-6 bg-red-600 p-4 rounded-full">
+        <UserPlus color="white" size={24} />
+      </TouchableOpacity>
+    </View>
+  )
+}
+
+// ---------- file: app/(tabs)/clients.tsx ----------
+import React, { useMemo, useState } from 'react'
+import { View, Text, TextInput, FlatList, Image, Pressable, Modal, TouchableOpacity, Share } from 'react-native'
+import { BlurView } from 'expo-blur'
+import { User, Search, Calendar, Pencil, Phone, MessageSquare, BadgeCheck, AlertTriangle, Download } from 'lucide-react-native'
+import { useApp } from '../../lib/store'
+import { formatISODate, toCSV } from '../../lib/utils'
+import * as Linking from 'expo-linking'
+
+export default function ClientsPage() {
+  const { clients, updateClient } = useApp()
+  const [q, setQ] = useState('')
+  const [dateFrom, setDateFrom] = useState<string | null>(null)
+  const [selected, setSelected] = useState<string | null>(null)
+  const current = useMemo(() => clients.find(c => c.id === selected) || null, [clients, selected])
+
+  const filtered = clients.filter(c => {
+    const matchQ = `${c.name} ${c.phone} ${c.email}`.toLowerCase().includes(q.toLowerCase())
+    const matchDate = !dateFrom || c.createdAt >= dateFrom
+    return matchQ && matchDate
+  })
+
+  const onRemindWhatsApp = (phone: string, name: string, amount = 0) => {
+    const msg = encodeURIComponent(`Hi ${name}, this is Tristar Garage. You have a pending balance of KES ${amount}. Kindly clear it. Thank you.`)
+    const url = `whatsapp://send?phone=${phone}&text=${msg}`
+    Linking.openURL(url).catch(() => {})
+  }
+
+  const onExport = async () => {
+    const csv = toCSV(clients.map(c => ({ id: c.id, name: c.name, phone: c.phone, email: c.email, pending: c.pending ? 'YES' : 'NO', cars: c.cars.join('|'), createdAt: c.createdAt })))
+    try { await Share.share({ message: csv }) } catch {}
+  }
+
+  return (
+    <View className="flex-1 bg-[#0A0F1E] pt-14">
+      <View className="flex-row justify-between items-center px-4 mb-3">
+        <Text className="text-white text-2xl font-bold">Clients</Text>
+        <User size={26} color="white" />
+      </View>
+
+      {/* Search + export */}
+      <View className="px-4 gap-3 mb-2">
+        <View className="flex-row items-center bg-white/10 rounded-xl px-3 py-2">
+          <Search size={18} color="white" />
+          <TextInput placeholder="Search by name/phone/email" placeholderTextColor="#9ca3af" value={q} onChangeText={setQ} className="flex-1 text-white ml-2" />
+          <Calendar size={18} color="white" />
+        </View>
+        <TouchableOpacity onPress={onExport} className="self-start bg-white/10 px-3 py-2 rounded-xl flex-row items-center">
+          <Download size={16} color="white" />
+          <Text className="text-white ml-2">Export CSV</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        contentContainerStyle={{ padding: 16 }}
+        data={filtered}
+        keyExtractor={(item) => item.id}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        renderItem={({ item }) => (
+          <BlurView intensity={50} tint="dark" className="rounded-2xl overflow-hidden">
+            <View className="flex-row items-center p-4 gap-3">
+              <Image source={{ uri: item.avatar }} style={{ width: 56, height: 56, borderRadius: 9999 }} />
+              <View className="flex-1">
+                <Text className="text-white font-bold text-lg">{item.name}</Text>
+                <Text className="text-gray-300 text-xs">{item.phone} • {item.email}</Text>
+                <Text className="text-gray-400 text-xs">Cars: {item.cars.join(', ')}</Text>
+                <View className="flex-row items-center mt-1">
+                  {item.pending ? (
+                    <AlertTriangle size={16} color="#f87171" />
+                  ) : (
+                    <BadgeCheck size={16} color="#34d399" />
+                  )}
+                  <Text className={`ml-1 text-xs ${item.pending ? 'text-red-400' : 'text-green-400'}`}>{item.pending ? 'Pending balance' : 'Cleared'}</Text>
+                </View>
+              </View>
+              <View className="gap-3">
+                <Pressable onPress={() => setSelected(item.id)} className="bg-white/10 px-3 py-2 rounded-xl">
+                  <Pencil size={18} color="white" />
+                </Pressable>
+                <Pressable onPress={() => onRemindWhatsApp(item.phone, item.name, item.pendingAmount || 0)} className="bg-red-600 px-3 py-2 rounded-xl">
+                  <MessageSquare size={18} color="white" />
+                </Pressable>
+              </View>
+            </View>
+          </BlurView>
+        )}
+      />
+
+      {/* Edit Modal */}
+      <Modal visible={!!selected} animationType="slide" transparent onRequestClose={() => setSelected(null)}>
+        <View className="flex-1 bg-black/70 justify-center items-center px-4">
+          <BlurView intensity={70} tint="dark" className="w-full rounded-2xl p-5">
+            <Text className="text-white text-xl font-bold mb-3">Edit Client</Text>
+            <TextInput defaultValue={current?.name} placeholder="Name" placeholderTextColor="#9ca3af" className="bg-white/10 text-white px-4 py-3 rounded-xl mb-2" onChangeText={(v)=>current && (current.name=v)} />
+            <TextInput defaultValue={current?.phone} placeholder="Phone" placeholderTextColor="#9ca3af" className="bg-white/10 text-white px-4 py-3 rounded-xl mb-2" onChangeText={(v)=>current && (current.phone=v)} />
+            <TextInput defaultValue={current?.email} placeholder="Email" placeholderTextColor="#9ca3af" className="bg-white/10 text-white px-4 py-3 rounded-xl mb-2" onChangeText={(v)=>current && (current.email=v)} />
+            <View className="flex-row gap-3 mt-2">
+              <TouchableOpacity onPress={()=>{ if(current){ updateClient(current.id, current) }; setSelected(null)}} className="flex-1 bg-red-600 py-3 rounded-xl"><Text className="text-white text-center font-semibold">Save</Text></TouchableOpacity>
+              <TouchableOpacity onPress={()=>setSelected(null)} className="flex-1 bg-white/10 py-3 rounded-xl"><Text className="text-white text-center">Cancel</Text></TouchableOpacity>
+            </View>
+          </BlurView>
+        </View>
+      </Modal>
+    </View>
+  )
+}
+
+// ---------- file: app/(tabs)/employees.tsx ----------
+import React, { useState } from 'react'
+import { View, Text, TextInput, FlatList, Pressable } from 'react-native'
+import { useApp } from '../../lib/store'
+import { BlurView } from 'expo-blur'
+import { Users, Calendar, Search, Pencil } from 'lucide-react-native'
+
+export default function EmployeesPage() {
+  const { employees, updateEmployee } = useApp()
+  const [q, setQ] = useState('')
+  const filtered = employees.filter(e => e.name.toLowerCase().includes(q.toLowerCase()))
+
+  return (
+    <View className="flex-1 bg-[#0A0F1E] pt-14">
+      <View className="flex-row justify-between items-center px-4 mb-3">
+        <Text className="text-white text-2xl font-bold">Employees</Text>
+        <Users size={26} color="white" />
+      </View>
+
+      <View className="px-4 mb-3 flex-row items-center bg-white/10 rounded-xl px-3 py-2">
+        <Search size={18} color="white" />
+        <TextInput value={q} onChangeText={setQ} placeholder="Search employees" placeholderTextColor="#9ca3af" className="flex-1 text-white ml-2" />
+        <Calendar size={18} color="white" />
+      </View>
+
+      <FlatList
+        contentContainerStyle={{ padding: 16 }}
+        data={filtered}
+        keyExtractor={(i)=>i.id}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        renderItem={({ item }) => (
+          <BlurView intensity={50} tint="dark" className="rounded-2xl p-4">
+            <View className="flex-row justify-between">
+              <View className="flex-1 pr-3">
+                <Text className="text-white font-bold text-lg">{item.name}</Text>
+                <Text className="text-gray-400 text-xs">{item.phone}</Text>
+                <Text className="text-green-400 text-xs mt-1">Revenue collected: KES {item.revenue.toLocaleString()}</Text>
+                <Text className="text-gray-300 text-xs mt-1">Attendance: {item.attendance.present} present • {item.attendance.missed} missed</Text>
+              </View>
+              <Pressable onPress={()=>updateEmployee(item.id, { revenue: item.revenue + 1000 })} className="bg-white/10 h-10 w-10 rounded-xl items-center justify-center">
+                <Pencil size={18} color="white" />
+              </Pressable>
+            </View>
+          </BlurView>
+        )}
+      />
+    </View>
+  )
+}
+
+// ---------- file: app/(tabs)/cars.tsx ----------
+import React, { useState } from 'react'
+import { View, Text, TextInput, FlatList, Image, Pressable } from 'react-native'
+import { useApp } from '../../lib/store'
+import { BlurView } from 'expo-blur'
+import { Car as CarIcon, Calendar, Search, Pencil, BadgeCheck, Wrench } from 'lucide-react-native'
+
+export default function CarsPage() {
+  const { cars, toggleCarPaid, toggleCarWorking, updateCar } = useApp()
+  const [q, setQ] = useState('')
+  const filtered = cars.filter(c => `${c.model} ${c.owner}`.toLowerCase().includes(q.toLowerCase()))
+
+  return (
+    <View className="flex-1 bg-[#0A0F1E] pt-14">
+      <View className="flex-row justify-between items-center px-4 mb-3">
+        <Text className="text-white text-2xl font-bold">Cars</Text>
+        <CarIcon size={26} color="white" />
+      </View>
+
+      <View className="px-4 mb-3 flex-row items-center bg-white/10 rounded-xl px-3 py-2">
+        <Search size={18} color="white" />
+        <TextInput value={q} onChangeText={setQ} placeholder="Search cars or owners" placeholderTextColor="#9ca3af" className="flex-1 text-white ml-2" />
+        <Calendar size={18} color="white" />
+      </View>
+
+      <FlatList
+        contentContainerStyle={{ padding: 16 }}
+        data={filtered}
+        keyExtractor={(i)=>i.id}
+        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
+        renderItem={({ item }) => (
+          <BlurView intensity={50} tint="dark" className="rounded-2xl overflow-hidden">
+            <View className="flex-row p-4 gap-3 items-center">
+              <Image source={{ uri: item.image }} style={{ width: 72, height: 72, borderRadius: 12 }} />
+              <View className="flex-1">
+                <Text className="text-white font-bold text-lg">{item.model}</Text>
+                <Text className="text-gray-300 text-xs">Owner: {item.owner}</Text>
+                <Text className="text-gray-400 text-xs">Booked: {item.bookedAt}</Text>
+                <Text className="text-gray-400 text-xs">Work: {item.work}</Text>
+                <View className="flex-row items-center mt-1 gap-2">
+                  <Pressable onPress={()=>toggleCarWorking(item.id)} className={`px-3 py-1 rounded-lg ${item.working ? 'bg-green-600' : 'bg-gray-600'}`}>
+                    <Text className="text-white text-xs">{item.working ? 'Working' : 'Not Working'}</Text>
+                  </Pressable>
+                  <Pressable onPress={()=>toggleCarPaid(item.id)} className={`px-3 py-1 rounded-lg ${item.paid ? 'bg-green-600' : 'bg-red-600'}`}>
+                    <Text className="text-white text-xs">{item.paid ? 'Paid' : 'Not Paid'}</Text>
+                  </Pressable>
+                </View>
+              </View>
+              <Pressable onPress={()=>updateCar(item.id, { work: item.work + ' • check' })} className="bg-white/10 h-10 w-10 rounded-xl items-center justify-center">
+                <Pencil size={18} color="white" />
+              </Pressable>
+            </View>
+          </BlurView>
+        )}
+      />
+    </View>
+  )
+}
+
+// ---------- file: app/(tabs)/reports.tsx ----------
+import React from 'react'
+import { View, Text, ScrollView } from 'react-native'
+import { useApp } from '../../lib/store'
+import { BlurView } from 'expo-blur'
+
+export default function ReportsPage(){
+  const { totals } = useApp()
+  const rows = [
+    { k: 'Revenue (all time)', v: `KES ${totals.revenue.toLocaleString()}` },
+    { k: 'Clients', v: `${totals.clients}` },
+    { k: 'Cars Worked', v: `${totals.carsWorked}` },
+    { k: 'Pending Payments', v: `${totals.pendingPayments}` },
+  ]
+  return (
+    <View className="flex-1 bg-[#0A0F1E] pt-14">
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+        {rows.map((r)=> (
+          <BlurView key={r.k} intensity={60} tint="dark" className="rounded-2xl p-5">
+            <Text className="text-gray-300">{r.k}</Text>
+            <Text className="text-white text-xl font-bold">{r.v}</Text>
+          </BlurView>
+        ))}
+      </ScrollView>
+    </View>
+  )
+}
+
+// ---------- file: app/index.tsx ----------
+// Redirect root to tabs dashboard for convenience
+import { Redirect } from 'expo-router'
+export default function Index(){
+  return <Redirect href="/(tabs)/dashboard" />
+}
+
+// ---------- file: lib/types.ts ----------
+export type Client = {
+  id: string
+  name: string
+  phone: string
+  email: string
+  avatar: string
+  whatsapp?: string
+  cars: string[]
+  pending: boolean
+  pendingAmount?: number
+  createdAt: string // ISO date
+}
+
+export type Employee = {
+  id: string
+  name: string
+  phone: string
+  revenue: number
+  attendance: { present: number; missed: number }
+}
+
+export type Car = {
+  id: string
+  model: string
+  owner: string
+  bookedAt: string
+  work: string
+  paid: boolean
+  working: boolean
+  image: string
+}
+
+export type AppState = {
+  clients: Client[]
+  employees: Employee[]
+  cars: Car[]
+}
+
+// ---------- file: lib/data.ts ----------
+import { AppState } from './types'
+
+export const initialData: AppState = {
+  clients: [
+    { id: 'c1', name: 'John Doe', phone: '+254700000000', email: 'john@example.com', avatar: 'https://i.pravatar.cc/150?img=1', cars: ['Toyota Premio'], pending: true, pendingAmount: 2500, createdAt: '2025-08-01' },
+    { id: 'c2', name: 'Jane Smith', phone: '+254711111111', email: 'jane@example.com', avatar: 'https://i.pravatar.cc/150?img=2', cars: ['Nissan X-Trail'], pending: false, createdAt: '2025-08-10' },
+  ],
+  employees: [
+    { id: 'e1', name: 'Mark Otieno', phone: '+254722222222', revenue: 120000, attendance: { present: 18, missed: 2 } },
+    { id: 'e2', name: 'Linda Mwangi', phone: '+254733333333', revenue: 85000, attendance: { present: 15, missed: 5 } },
+  ],
+  cars: [
+    { id: 'v1', model: 'Toyota Premio', owner: 'John Doe', bookedAt: '2025-08-05', work: 'Engine Repair', paid: false, working: true, image: 'https://i.imgur.com/Q7N9QZT.png' },
+    { id: 'v2', model: 'Nissan X-Trail', owner: 'Jane Smith', bookedAt: '2025-08-08', work: 'Brake Replacement', paid: true, working: false, image: 'https://i.imgur.com/YZ9Wz0M.png' },
+  ],
+}
+
+// ---------- file: lib/store.tsx ----------
+import React, { createContext, useContext, useMemo, useReducer } from 'react'
+import { AppState, Client, Employee, Car } from './types'
+import { initialData } from './data'
+
+// Simple reducer-based store (no external libs)
+
+type Action =
+  | { type: 'UPDATE_CLIENT'; id: string; patch: Partial<Client> }
+  | { type: 'UPDATE_EMPLOYEE'; id: string; patch: Partial<Employee> }
+  | { type: 'UPDATE_CAR'; id: string; patch: Partial<Car> }
+  | { type: 'TOGGLE_CAR_PAID'; id: string }
+  | { type: 'TOGGLE_CAR_WORKING'; id: string }
+
+function reducer(state: AppState, action: Action): AppState {
+  switch (action.type) {
+    case 'UPDATE_CLIENT':
+      return { ...state, clients: state.clients.map(c => (c.id === action.id ? { ...c, ...action.patch } : c)) }
+    case 'UPDATE_EMPLOYEE':
+      return { ...state, employees: state.employees.map(e => (e.id === action.id ? { ...e, ...action.patch } : e)) }
+    case 'UPDATE_CAR':
+      return { ...state, cars: state.cars.map(v => (v.id === action.id ? { ...v, ...action.patch } : v)) }
+    case 'TOGGLE_CAR_PAID':
+      return { ...state, cars: state.cars.map(v => (v.id === action.id ? { ...v, paid: !v.paid } : v)) }
+    case 'TOGGLE_CAR_WORKING':
+      return { ...state, cars: state.cars.map(v => (v.id === action.id ? { ...v, working: !v.working } : v)) }
+    default:
+      return state
+  }
+}
+
+const Ctx = createContext<{
+  clients: Client[]
+  employees: Employee[]
+  cars: Car[]
+  updateClient: (id: string, patch: Partial<Client>) => void
+  updateEmployee: (id: string, patch: Partial<Employee>) => void
+  updateCar: (id: string, patch: Partial<Car>) => void
+  toggleCarPaid: (id: string) => void
+  toggleCarWorking: (id: string) => void
+  totals: { revenue: number; clients: number; carsWorked: number; pendingPayments: number }
+} | null>(null)
+
+export function AppProvider({ children }: { children: React.ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, initialData)
+
+  const value = useMemo(() => {
+    const totals = {
+      revenue: state.employees.reduce((s, e) => s + (e.revenue || 0), 0),
+      clients: state.clients.length,
+      carsWorked: state.cars.filter(c => c.working || c.paid).length,
+      pendingPayments: state.clients.filter(c => c.pending).length,
+    }
+    return {
+      clients: state.clients,
+      employees: state.employees,
+      cars: state.cars,
+      updateClient: (id: string, patch: Partial<Client>) => dispatch({ type: 'UPDATE_CLIENT', id, patch }),
+      updateEmployee: (id: string, patch: Partial<Employee>) => dispatch({ type: 'UPDATE_EMPLOYEE', id, patch }),
+      updateCar: (id: string, patch: Partial<Car>) => dispatch({ type: 'UPDATE_CAR', id, patch }),
+      toggleCarPaid: (id: string) => dispatch({ type: 'TOGGLE_CAR_PAID', id }),
+      toggleCarWorking: (id: string) => dispatch({ type: 'TOGGLE_CAR_WORKING', id }),
+      totals,
+    }
+  }, [state])
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
+}
+
+export function useApp() {
+  const ctx = useContext(Ctx)
+  if (!ctx) throw new Error('useApp must be used inside AppProvider')
+  return ctx
+}
+
+// ---------- file: lib/utils.ts ----------
+export const formatISODate = (iso: string) => new Date(iso).toISOString().slice(0, 10)
+
+export const toCSV = (rows: Record<string, any>[]) => {
+  if (!rows.length) return ''
+  const headers = Object.keys(rows[0])
+  const escape = (v: any) => `"${String(v ?? '').replace(/"/g, '""')}"`
+  return [headers.join(','), ...rows.map(r => headers.map(h => escape(r[h])).join(','))].join('\n')
+}
+
+// ---------- file: app/(tabs)/operator.tsx ----------
+import React, { useState } from 'react'
+import { View, Text, TextInput, TouchableOpacity, Alert } from 'react-native'
+import { BlurView } from 'expo-blur'
+
+export default function OperatorPage(){
+  const [moneyIn, setMoneyIn] = useState('')
+  const [moneyOut, setMoneyOut] = useState('')
+  const [customers, setCustomers] = useState('')
+
+  const onSave = () => {
+    Alert.alert('Saved', `Money In: ${moneyIn}\nMoney Out: ${moneyOut}\nCustomers: ${customers}`)
+    setMoneyIn(''); setMoneyOut(''); setCustomers('')
+  }
+
+  return (
+    <View className="flex-1 bg-[#0A0F1E] pt-14 px-4">
+      <Text className="text-white text-2xl font-bold mb-4">Operator</Text>
+      <BlurView intensity={60} tint="dark" className="rounded-2xl p-5 mb-3">
+        <Text className="text-gray-300 mb-2">Money In</Text>
+        <TextInput value={moneyIn} onChangeText={setMoneyIn} keyboardType="numeric" placeholder="KES" placeholderTextColor="#9ca3af" className="bg-white/10 text-white rounded-xl px-4 py-3" />
+      </BlurView>
+      <BlurView intensity={60} tint="dark" className="rounded-2xl p-5 mb-3">
+        <Text className="text-gray-300 mb-2">Money Out</Text>
+        <TextInput value={moneyOut} onChangeText={setMoneyOut} keyboardType="numeric" placeholder="KES" placeholderTextColor="#9ca3af" className="bg-white/10 text-white rounded-xl px-4 py-3" />
+      </BlurView>
+      <BlurView intensity={60} tint="dark" className="rounded-2xl p-5 mb-6">
+        <Text className="text-gray-300 mb-2">Customers Today</Text>
+        <TextInput value={customers} onChangeText={setCustomers} keyboardType="numeric" placeholder="number" placeholderTextColor="#9ca3af" className="bg-white/10 text-white rounded-xl px-4 py-3" />
+      </BlurView>
+      <TouchableOpacity onPress={onSave} className="bg-red-600 py-4 rounded-2xl items-center">
+        <Text className="text-white font-semibold">Save</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+)
+use code that is compatible with({
+  "name": "tristar-app",
+  "main": "expo-router/entry",
+  "version": "1.0.0",
+  "scripts": {
+    "start": "expo start",
+    "reset-project": "node ./scripts/reset-project.js",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "lint": "expo lint"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.1.0",
+    "@react-navigation/bottom-tabs": "^7.3.10",
+    "@react-navigation/elements": "^2.3.8",
+    "@react-navigation/native": "^7.1.6",
+    "expo": "~53.0.20",
+    "expo-blur": "~14.1.5",
+    "expo-constants": "~17.1.7",
+    "expo-font": "~13.3.2",
+    "expo-haptics": "~14.1.4",
+    "expo-image": "~2.4.0",
+    "expo-linking": "~7.1.7",
+    "expo-router": "~5.1.4",
+    "expo-splash-screen": "~0.30.10",
+    "expo-status-bar": "~2.2.3",
+    "expo-symbols": "~0.4.5",
+    "expo-system-ui": "~5.0.10",
+    "expo-web-browser": "~14.2.0",
+    "lucide-react": "^0.541.0",
+    "nativewind": "^4.1.23",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.5",
+    "react-native-gesture-handler": "~2.24.0",
+    "react-native-reanimated": "~3.17.4",
+    "react-native-safe-area-context": "5.4.0",
+    "react-native-screens": "~4.11.1",
+    "react-native-web": "~0.20.0",
+    "react-native-webview": "13.13.5"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.2",
+    "@types/react": "~19.0.10",
+    "eslint": "^9.25.0",
+    "eslint-config-expo": "~9.2.0",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}
+)

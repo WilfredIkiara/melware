@@ -1,50 +1,177 @@
-# Welcome to your Expo app 👋
+# Tristar Garage Management System
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+A comprehensive full-stack garage management application built with React Native (Expo) and Express.js.
 
-## Get started
+## 🏗️ Project Structure
 
-1. Install dependencies
-
-   ```bash
-   npm install
-   ```
-
-2. Start the app
-
-   ```bash
-   npx expo start
-   ```
-
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+```
+TRISTAR-APP/
+├── app/                    # React Native app (Expo Router)
+│   ├── (tabs)/            # Tab navigation screens
+│   ├── _layout.tsx        # Root layout
+│   ├── login.tsx          # Authentication screen
+│   └── register.tsx       # Registration screen
+├── backend/               # Backend API server
+│   ├── server.js          # Express server
+│   ├── api.ts            # API client (axios)
+│   ├── package.json      # Backend dependencies
+│   ├── README.md         # Backend documentation
+│   └── README-API.md     # API documentation
+├── components/            # Reusable React components
+├── lib/                  # Utilities and shared code
+├── assets/               # Images and static assets
+├── constants/            # App constants
+└── package.json          # Main project dependencies
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🚀 Getting Started
 
-## Learn more
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- Expo CLI (optional)
 
-To learn more about developing your project with Expo, look at the following resources:
+### Installation
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+1. **Clone and install dependencies:**
+```bash
+git clone <repository-url>
+cd TRISTAR-APP
+npm install
+```
 
-## Join the community
+2. **Install backend dependencies:**
+```bash
+cd backend
+npm install
+cd ..
+```
 
-Join our community of developers creating universal apps.
+### Running the Application
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+#### Development Mode (Recommended)
+```bash
+# Start both backend and frontend simultaneously
+npm run dev
+```
+
+#### Manual Start
+```bash
+# Terminal 1: Start backend server
+npm run server
+
+# Terminal 2: Start React Native app
+npm start
+```
+
+## 📱 Features
+
+### Frontend (React Native)
+- ✅ **Amazing Loading Screen** - Animated car icon with heartbeat effect
+- ✅ **Tab Navigation** - Organized bottom tabs with dropdown for additional options
+- ✅ **Authentication** - Login/register with JWT tokens
+- ✅ **Car Management** - Add, edit, view cars with status tracking
+- ✅ **Client Management** - Customer database with contact info
+- ✅ **Employee Management** - Staff tracking with attendance
+- ✅ **Reports & Analytics** - Dashboard with key metrics
+- ✅ **SMS Integration** - Send reminders and notifications
+- ✅ **Admin Panel** - User management and settings
+- ✅ **Dark/Light Theme** - Theme switching support
+
+### Backend (Express.js)
+- ✅ **RESTful API** - Complete CRUD operations
+- ✅ **Authentication** - JWT-based security
+- ✅ **Data Management** - Cars, clients, employees, reports
+- ✅ **SMS Ready** - Integration points for SMS services
+- ✅ **Admin Functions** - User management and settings
+- ✅ **Error Handling** - Comprehensive error responses
+- ✅ **CORS Support** - Cross-origin requests enabled
+
+## 🔧 API Integration
+
+The app uses axios for seamless API communication:
+
+```javascript
+import { apiService } from './backend/api'
+
+// Get all cars
+const cars = await apiService.cars.getAll()
+
+// Add new car
+await apiService.cars.create(carData)
+
+// Update car
+await apiService.cars.update(id, carData)
+```
+
+## 📊 Key Technologies
+
+- **Frontend:** React Native, Expo, TypeScript
+- **Backend:** Express.js, Node.js
+- **Navigation:** Expo Router
+- **Styling:** NativeWind (Tailwind CSS)
+- **HTTP Client:** Axios
+- **Icons:** @expo/vector-icons
+- **Database:** In-memory (ready for MongoDB/PostgreSQL)
+
+## 🎨 UI/UX Highlights
+
+- **Loading Screen:** Animated car with heartbeat effect
+- **Navigation:** Clean tabs with organized dropdown
+- **Icons:** Consistent Ionicons throughout
+- **Themes:** Dark/light mode support
+- **Animations:** Smooth transitions and effects
+- **Responsive:** Optimized for mobile devices
+
+## 🚀 Deployment
+
+### Backend Deployment
+```bash
+cd backend
+npm run build
+npm start
+```
+
+### Mobile App
+```bash
+# Build for production
+expo build:android
+expo build:ios
+```
+
+## 📝 Development
+
+### Adding New Features
+1. **Backend:** Add routes in `backend/server.js`
+2. **Frontend:** Create components in `app/` or `components/`
+3. **API:** Update `backend/api.ts` for new endpoints
+4. **Navigation:** Add screens to `app/(tabs)/` for tab navigation
+
+### Project Conventions
+- **Components:** PascalCase naming
+- **Files:** kebab-case for pages, camelCase for components
+- **API:** RESTful endpoints with consistent naming
+- **State:** Local state with API synchronization
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
+
+## 📄 License
+
+MIT License - see LICENSE file for details
+
+## 📞 Support
+
+For questions or issues:
+- Check the API documentation in `backend/README-API.md`
+- Review the backend setup in `backend/README.md`
+- Test with the development scripts
+
+---
+
+**Tristar Garage** - Professional automotive management made simple 🚗✨

@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Dark mode support for NativeWind */
+.dark {
+  color-scheme: dark;
+}
+
+.light {
+  color-scheme: light;
+}
+
+/* Ensure proper theming for all components */
+* {
+  @apply transition-colors duration-200;
+}
