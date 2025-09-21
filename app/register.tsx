@@ -1,40 +1,49 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, ScrollView } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { useRouter } from "expo-router";
+import { useAuth } from '@/lib/auth';
 
 export default function Register() {
   const router = useRouter();
+  const { register, isLoading } = useAuth();
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    name: "", // Changed from firstName/lastName to match backend
     email: "",
     password: "",
     confirmPassword: "",
-    phone: "",
   });
 
-  const handleRegister = () => {
-    // TODO: replace with real registration logic
-    const { firstName, lastName, email, password, confirmPassword, phone } = formData;
+  const handleRegister = async () => {
+    const { name, email, password, confirmPassword } = formData;
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword) {
-      alert("Please fill in all required fields");
+    if (!name || !email || !password || !confirmPassword) {
+      Alert.alert("Error", "Please fill in all required fields");
       return;
     }
 
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
     if (password.length < 6) {
-      alert("Password must be at least 6 characters long");
+      Alert.alert("Error", "Password must be at least 6 characters long");
       return;
     }
 
-    // Simulate successful registration
-    alert("Registration successful! Please login.");
-    router.replace("/login");
+    try {
+      const result = await register(name, email, password);
+      
+      if (result.success) {
+        Alert.alert("Success", "Registration successful! You can now login.");
+        router.replace("/login");
+      } else {
+        Alert.alert("Registration Failed", result.message || "Failed to create account");
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+      Alert.alert("Error", "Network error. Please try again.");
+    }
   };
 
   const updateFormData = (field: string, value: string) => {
@@ -50,20 +59,11 @@ export default function Register() {
           Join Tristar App to manage your automotive business
         </Text>
 
-        {/* First Name Input */}
+        {/* Name Input (replaces firstName/lastName) */}
         <TextInput
-          value={formData.firstName}
-          onChangeText={(value) => updateFormData("firstName", value)}
-          placeholder="First Name"
-          placeholderTextColor="#aaa"
-          className="w-full bg-white/10 text-white px-4 py-3 rounded-2xl mb-4"
-        />
-
-        {/* Last Name Input */}
-        <TextInput
-          value={formData.lastName}
-          onChangeText={(value) => updateFormData("lastName", value)}
-          placeholder="Last Name"
+          value={formData.name}
+          onChangeText={(value) => updateFormData("name", value)}
+          placeholder="Full Name"
           placeholderTextColor="#aaa"
           className="w-full bg-white/10 text-white px-4 py-3 rounded-2xl mb-4"
         />
@@ -76,16 +76,6 @@ export default function Register() {
           placeholderTextColor="#aaa"
           keyboardType="email-address"
           autoCapitalize="none"
-          className="w-full bg-white/10 text-white px-4 py-3 rounded-2xl mb-4"
-        />
-
-        {/* Phone Input */}
-        <TextInput
-          value={formData.phone}
-          onChangeText={(value) => updateFormData("phone", value)}
-          placeholder="Phone Number (Optional)"
-          placeholderTextColor="#aaa"
-          keyboardType="phone-pad"
           className="w-full bg-white/10 text-white px-4 py-3 rounded-2xl mb-4"
         />
 
@@ -112,9 +102,14 @@ export default function Register() {
         {/* Register Button */}
         <TouchableOpacity
           onPress={handleRegister}
-          className="w-full bg-red-600 py-3 rounded-2xl items-center shadow-md mb-4"
+          disabled={isLoading}
+          className={`w-full py-3 rounded-2xl items-center shadow-md ${
+            isLoading ? 'bg-gray-600' : 'bg-red-600'
+          }`}
         >
-          <Text className="text-white font-semibold text-lg">Create Account</Text>
+          <Text className="text-white font-semibold text-lg">
+            {isLoading ? 'Creating Account...' : 'Create Account'}
+          </Text>
         </TouchableOpacity>
 
         {/* Login Link */}

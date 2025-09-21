@@ -1,17 +1,342 @@
-import { BlurView } from 'expo-blur'
-import { useRouter } from 'expo-router'
-import { BarChart3, Bell, Car, ClipboardList, Clock, DollarSign, FileText, LogOut, MapPin, Package, Plus, Settings } from 'lucide-react'
-import React from 'react'
-import { Alert, Image, ScrollView, Text, TouchableOpacity, View } from 'react-native'
-import { images } from '../../constants/images'
-import { useAuth } from '../../lib/auth'
-import { useApp } from '../../lib/store'
+
+// import { BlurView } from 'expo-blur';
+// import { useRouter } from 'expo-router';
+// import { Bell, Car, ClipboardList, Clock, DollarSign, FileText, LogOut, MapPin, Package } from 'lucide-react';
+// import React from 'react';
+// import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+// import { useAuth } from '../../lib/auth';
+// import { useSuperAdminData } from '../../lib/pages/useSuperAdminData';
+
+// // Define the types that match your backend response
+// interface CustomerData {
+//   id?: string;
+//   first_name: string;
+//   last_name: string;
+//   phone_number?: string;
+//   total_spent?: number;
+//   created_at?: string;
+//   balance?: number;
+// }
+
+// interface Activity {
+//   id: string;
+//   profile: { name: string };
+//   activity_type: string;
+//   description: string;
+//   timestamp: string;
+// }
+
+// export default function SuperAdmin() {
+//   const { stats, activities, workOrders, appointments, financials, inventory, customers, staff, loading, error } = useSuperAdminData();
+  
+//   const { user, logout } = useAuth();
+//   const router = useRouter();
+//   const branchName = "Main Branch";
+
+//   const handleLogout = () => {
+//     Alert.alert(
+//       "Logout",
+//       "Are you sure you want to logout?",
+//       [
+//         { text: "Cancel", style: "cancel" },
+//         {
+//           text: "Logout",
+//           style: "destructive",
+//           onPress: async () => {
+//             await logout();
+//             router.replace('/login');
+//           }
+//         }
+//       ]
+//     );
+//   };
+  
+//   // A helper function for the quick action buttons
+//   const handleQuickAction = (action: string) => {
+//     Alert.alert(
+//       "Action Triggered",
+//       `The "${action}" action has been initiated. This would typically trigger an API call to the backend.`
+//     );
+//   };
+
+//   const formattedDate = (dateString?: string) => {
+//     if (!dateString) return "N/A";
+//     const date = new Date(dateString);
+//     if (isNaN(date.getTime())) return "Invalid Date";
+//     return date.toLocaleDateString();
+//   };
+
+//   // Helper function to get total customers count from nested structure
+//   const getTotalCustomers = () => {
+//     if (!customers) return 0;
+//     // Check if customers is an array (flat structure) or object with nested arrays
+//     if (Array.isArray(customers)) {
+//       return customers.length;
+//     } else {
+//       // Handle nested structure
+//       const topCustomers = customers.topCustomers?.length || 0;
+//       const newCustomers = customers.newCustomersThisWeek?.length || 0;
+//       const outstanding = customers.outstandingBalances?.length || 0;
+//       return topCustomers + newCustomers + outstanding;
+//     }
+//   };
+
+//   // Helper to get flat customers array for display
+//   const getCustomersForDisplay = () => {
+//     if (!customers) return [];
+//     if (Array.isArray(customers)) {
+//       return customers;
+//     } else {
+//       // Combine all customer arrays from nested structure
+//       return [
+//         ...(customers.topCustomers || []),
+//         ...(customers.newCustomersThisWeek || []),
+//         ...(customers.outstandingBalances || [])
+//       ];
+//     }
+//   };
+
+//   if (loading) {
+//     return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-white text-2xl">Loading...</Text></View>;
+//   }
+
+//   if (error) {
+//     return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-red-500 text-2xl">Error: {error}</Text></View>;
+//   }
+
+//   return (
+//     <View className="flex-1 bg-[#1A2033] pt-12">
+//       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+//         {/* Header Section */}
+//         <View className="px-6 py-4 flex-row justify-between items-center">
+//           <View>
+//             <Text className="text-white text-3xl font-bold">Hello, {user?.name || "Super Admin"}</Text>
+//             <Text className="text-gray-400 text-sm">{branchName}</Text>
+//           </View>
+//           <View className="flex-row items-center space-x-4">
+//             <TouchableOpacity onPress={() => router.push('/notifications' as any)}>
+//               <Bell size={24} color="white" />
+//             </TouchableOpacity>
+//             <TouchableOpacity onPress={handleLogout}>
+//               <LogOut size={24} color="white" />
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+
+//         {/* Dashboard Cards Section */}
+//         <View className="p-6">
+//           <View className="flex-row flex-wrap justify-between">
+//             {/* Total Revenue Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <DollarSign size={36} color="#4ade80" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Revenue</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : `KES ${stats?.financials?.total_revenue?.toLocaleString() || '0'}`}
+//               </Text>
+//             </BlurView>
+
+//             {/* Total Work Orders Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <ClipboardList size={36} color="#6366f1" />
+//               <Text className="text-gray-300 text-sm mt-2">Work Orders</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : workOrders?.length || 0}
+//               </Text>
+//             </BlurView>
+            
+//             {/* Total Clients Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <MapPin size={36} color="#38bdf8" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Clients</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : stats?.clients?.total_clients || getTotalCustomers()}
+//               </Text>
+//             </BlurView>
+            
+//             {/* Total Expenses Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <DollarSign size={36} color="#f87171" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Expenses</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : `KES ${stats?.expenses?.total_expenses?.toLocaleString() || '0'}`}
+//               </Text>
+//             </BlurView>
+
+//             {/* Low Stock Items Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <Package size={36} color="#facc15" />
+//               <Text className="text-gray-300 text-sm mt-2">Low Stock Items</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : stats?.inventory?.low_stock_count || inventory?.lowStockItems?.length || 0}
+//               </Text>
+//             </BlurView>
+            
+//             {/* Total Vehicles Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <Car size={36} color="#c084fc" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Vehicles</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : stats?.cars?.total_cars || 0}
+//               </Text>
+//             </BlurView>
+//           </View>
+//         </View>
+
+//         {/* Work Orders Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Latest Work Orders</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading work orders...</Text> : workOrders?.length === 0 ? <Text className="text-gray-300">No work orders found.</Text> : workOrders?.slice(0, 5).map((order) => (
+//               <View key={order.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <ClipboardList size={20} color="#6366f1" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">
+//                     Work Order #{String(order.id).substring(0, 8)}
+//                   </Text>
+//                   <Text className="text-gray-300 text-sm">
+//                     {order.clients?.first_name} {order.clients?.last_name}
+//                   </Text>
+//                   <Text className="text-gray-400 text-xs">
+//                     {order.client_vehicles?.make} - {order.client_vehicles?.licence_plate}
+//                   </Text>
+//                 </View>
+//                 <View className="flex-col items-end">
+//                   <Text className="text-white text-sm font-bold">KES {order.estimated_cost?.toLocaleString() || '0'}</Text>
+//                   <Text className="text-gray-400 text-xs">{order.status}</Text>
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+
+//         {/* Upcoming Appointments Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Upcoming Appointments</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading appointments...</Text> : appointments?.length === 0 ? <Text className="text-gray-300">No upcoming appointments.</Text> : appointments?.slice(0, 5).map((appt) => (
+//               <View key={appt.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <Clock size={20} color="#facc15" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">{appt.service_type}</Text>
+//                   <Text className="text-gray-300 text-sm">
+//                     {appt.clients?.first_name} {appt.clients?.last_name}
+//                   </Text>
+//                   <Text className="text-gray-400 text-xs">
+//                     {appt.client_vehicles?.licence_plate}
+//                   </Text>
+//                 </View>
+//                 <View className="flex-col items-end">
+//                   <Text className="text-gray-300 text-sm">{formattedDate(appt.scheduled_time)}</Text>
+//                   <Text className="text-gray-400 text-xs">{appt.status}</Text>
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+        
+//         {/* Latest Customers Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Latest Customers</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading customers...</Text> : getCustomersForDisplay().length === 0 ? <Text className="text-gray-300">No customers found.</Text> : getCustomersForDisplay().slice(0, 5).map((customer, index) => (
+//               <View key={customer.id || index} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <MapPin size={20} color="#38bdf8" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">{customer.first_name} {customer.last_name}</Text>
+//                   {customer.phone_number && (
+//                     <Text className="text-gray-300 text-sm">Phone: {customer.phone_number}</Text>
+//                   )}
+//                   {customer.created_at && (
+//                     <Text className="text-gray-400 text-xs">Joined: {formattedDate(customer.created_at)}</Text>
+//                   )}
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+
+//         {/* Recent Activities Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Recent Activities</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading activities...</Text> : activities?.length === 0 ? <Text className="text-gray-300">No activities found.</Text> : activities?.slice(0, 5).map((act) => (
+//               <View key={act.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <FileText size={20} color="#a855f7" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">{act.activity_type}</Text>
+//                   <Text className="text-gray-300 text-sm">{act.description}</Text>
+//                   <Text className="text-gray-400 text-xs">{formattedDate(act.timestamp)}</Text>
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+//       </ScrollView>
+
+//       {/* Footer / Quick Actions */}
+//       {/* <View className="absolute bottom-0 w-full h-20 bg-[#0A0F1E] flex-row justify-around items-center border-t border-gray-700">
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Add Job')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Add Job</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Add Expense')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Add Expense</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Add Customer')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Add Customer</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Manage Suppliers')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Manage Suppliers</Text>
+//         </TouchableOpacity>
+//       </View> */}
+//     </View>
+//   );
+// }
+import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
+import { Bell, Car, ChevronDown, ChevronUp, ClipboardList, Clock, DollarSign, FileText, LogOut, MapPin, Package } from 'lucide-react';
+import React, { useState } from 'react';
+import { Alert, Dimensions, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useAuth } from '../../lib/auth';
+import { useSuperAdminData } from '../../lib/pages/useSuperAdminData';
+
+// Define the types that match your backend response
+interface CustomerData {
+  id?: string;
+  first_name: string;
+  last_name: string;
+  phone_number?: string;
+  total_spent?: number;
+  created_at?: string;
+  balance?: number;
+}
+
+interface Activity {
+  id: string;
+  profile: { name: string };
+  activity_type: string;
+  description: string;
+  timestamp: string;
+}
+
+// Get the screen width to apply responsive classes conditionally
+const { width } = Dimensions.get('window');
+const isWeb = width >= 768;
 
 export default function SuperAdmin() {
-  const { totals, clients, employees, cars } = useApp()
-  const { user, logout } = useAuth()
-  const router = useRouter()
-  const branchName = "Main Branch"
+  const { stats, activities, workOrders, appointments, financials, inventory, customers, staff, loading, error } = useSuperAdminData();
+  
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const branchName = "Main Branch";
+
+  // State for collapsible lists
+  const [workOrdersCollapsed, setWorkOrdersCollapsed] = useState(false);
+  const [appointmentsCollapsed, setAppointmentsCollapsed] = useState(false);
+  const [customersCollapsed, setCustomersCollapsed] = useState(false);
 
   const handleLogout = () => {
     Alert.alert(
@@ -23,249 +348,244 @@ export default function SuperAdmin() {
           text: "Logout",
           style: "destructive",
           onPress: async () => {
-            await logout()
-            router.replace('/login')
+            await logout();
+            router.replace('/login');
           }
         }
       ]
-    )
+    );
+  };
+  
+  // A helper function for the quick action buttons
+  const handleQuickAction = (action: string) => {
+    Alert.alert(
+      "Action Triggered",
+      `The "${action}" action has been initiated. This would typically trigger an API call to the backend.`
+    );
+  };
+
+  const formattedDate = (dateString?: string) => {
+    if (!dateString) return "N/A";
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return "Invalid Date";
+    return date.toLocaleDateString();
+  };
+
+  // Helper function to get total customers count from nested structure
+  const getTotalCustomers = () => {
+    if (!customers) return 0;
+    // Check if customers is an array (flat structure) or object with nested arrays
+    if (Array.isArray(customers)) {
+      return customers.length;
+    } else {
+      // Handle nested structure
+      const topCustomers = customers.topCustomers?.length || 0;
+      const newCustomers = customers.newCustomersThisWeek?.length || 0;
+      const outstanding = customers.outstandingBalances?.length || 0;
+      return topCustomers + newCustomers + outstanding;
+    }
+  };
+
+  // Helper to get flat customers array for display
+  const getCustomersForDisplay = () => {
+    if (!customers) return [];
+    if (Array.isArray(customers)) {
+      return customers;
+    } else {
+      // Combine all customer arrays from nested structure
+      return [
+        ...(customers.topCustomers || []),
+        ...(customers.newCustomersThisWeek || []),
+        ...(customers.outstandingBalances || [])
+      ];
+    }
+  };
+
+  if (loading) {
+    return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-white text-2xl">Loading...</Text></View>;
   }
-  const todayStats = {
-    revenue: 25000,
-    jobsCompleted: 12,
-    pendingJobs: 5,
-    expenses: 5000,
-    staffAttendance: 8 // out of 10
+
+  if (error) {
+    return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-red-500 text-2xl">Error: {error}</Text></View>;
   }
-  // Mock data for inventory and expenses
-  const lowStockItems = [
-    { id: 'i1', name: 'Engine Oil', quantity: 3 },
-    { id: 'i2', name: 'Brake Pads', quantity: 5 },
-  ]
-
-  const expiringItems = [
-    { id: 'e1', name: 'Coolant', expiryDate: '2025-09-01' },
-  ]
-
-  const expenseBreakdown = [
-    { category: 'Parts', value: 50000, color: '#DC2626' },
-    { category: 'Salaries', value: 30000, color: '#2563EB' },
-    { category: 'Utilities', value: 20000, color: '#FBBF24' },
-  ]
-
-  // Mock data for work orders and appointments
-  const activeWorkOrders = cars.filter(car => car.working)
-  const upcomingAppointments = [
-    { id: 'a1', customer: 'John Doe', date: '2025-08-20', service: 'Oil Change' },
-    { id: 'a2', customer: 'Jane Smith', date: '2025-08-22', service: 'Brake Inspection' },
-  ]
-
-  // Mock data for employee performance and payroll
-  const payrollOverview = [
-    { id: 'p1', employee: 'Mark Otieno', status: 'Paid' },
-    { id: 'p2', employee: 'Linda Mwangi', status: 'Pending' },
-  ]
-
-  // Mock data for customer insights
-  const topCustomers = clients.slice(0, 3)
-  const newCustomersThisWeek = clients.filter(c => new Date(c.createdAt) > new Date('2025-08-10'))
-  const outstandingBalances = clients.filter(c => c.pending)
-
-  // Mock data for recent activity feed
-  const recentActivities = [
-    { id: 'r1', type: 'Payment', description: 'Payment received from John Doe', date: '2025-08-18' },
-    { id: 'r2', type: 'Job', description: 'Brake replacement completed for Jane Smith', date: '2025-08-17' },
-    { id: 'r3', type: 'Inventory', description: 'Low stock alert for Engine Oil', date: '2025-08-16' },
-    { id: 'r4', type: 'Staff', description: 'Mark Otieno logged in', date: '2025-08-15' },
-  ]
-
-  const stats = [
-    { id: 'rev', title: "Initial Bank Balance", value: `KES ${totals.revenue.toLocaleString()}`, Icon: DollarSign },
-    { id: 'jobs', title: "Gross Bank Blance", value: '15000', Icon: ClipboardList },
-    { id: 'cars', title: "Petty cash balance", value: totals.carsWorked.toString(), Icon: Car },
-    { id: 'stock', title: "paybill balance", value: lowStockItems.length.toString(), Icon: Package },
-    { id: 'pending', title: "Pending Payments", value: totals.pendingPayments.toString(), Icon: Clock },
-  ]
 
   return (
-    <View className="flex-1 bg-[#0A0F1E] pt-14">
-      {/* Header / Top Bar */}
-      <View className="flex-row items-center justify-between px-6 mb-4">
-        <View className="flex-row items-center space-x-4">
-          <Image source={images.tristarlogo} style={{ width: 104, height: 44 }} />
-          <Text className="text-white text-xl font-bold">Super Admin Dashboard</Text>
+    <View className="flex-1 bg-[#1A2033] pt-12">
+      <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+        {/* Header Section */}
+        <View className={`px-6 md:px-12 py-4 flex-row justify-between items-center`}>
+          <View>
+            <Text className="text-white text-3xl font-bold">Hello, {user?.name || "Super Admin"}</Text>
+            <Text className="text-gray-400 text-sm">{branchName}</Text>
+          </View>
+          <View className="flex-row items-center space-x-4">
+            <TouchableOpacity onPress={() => router.push('/notifications' as any)}>
+              <Bell size={24} color="white" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={handleLogout}>
+              <LogOut size={24} color="white" />
+            </TouchableOpacity>
+          </View>
         </View>
-        <View className="flex-row items-center space-x-6">
-          <TouchableOpacity>
-            <Bell size={24} color="red" />
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-row items-center space-x-1 bg-white/10 rounded px-3 py-1">
-            <MapPin size={16} color="green" />
-            <Text className="text-white">{branchName}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Settings size={24} color="white" />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleLogout} className="flex-row items-center space-x-1 bg-red-600 rounded px-3 py-1">
-            <LogOut size={16} color="white" />
-            <Text className="text-white">Logout</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
 
-      <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
-        {/* Key Metrics */}
-        <View className="flex-row flex-wrap gap-4">
-          {stats.map(({ id, title, value, Icon }) => (
-            <BlurView key={id} intensity={50}  className="rounded-2xl bg-white/10 p-5 flex-row items-center justify-between w-[48%]">
-              <View>
-                <Text className="text-gray-300">{title}</Text>
-                <Text className="text-2xl font-bold text-white">{value}</Text>
-              </View>
-              <Icon size={28} color="#DC2626" />
+        {/* Dashboard Cards Section */}
+        <View className={`p-6 md:p-12`}>
+          <View className={`flex-row flex-wrap justify-between md:grid md:grid-cols-3 md:gap-4`}>
+            {/* Total Revenue Card */}
+            <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-full md:w-auto md:mb-0 items-center justify-center h-36">
+              <DollarSign size={36} color="#4ade80" />
+              <Text className="text-gray-300 text-sm mt-2">Total Revenue</Text>
+              <Text className="text-white text-2xl font-bold mt-1">
+                {loading ? '...' : `KES ${stats?.financials?.total_revenue?.toLocaleString() || '0'}`}
+              </Text>
             </BlurView>
-          ))}
+
+            {/* Total Work Orders Card */}
+            <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-full md:w-auto md:mb-0 items-center justify-center h-36">
+              <ClipboardList size={36} color="#6366f1" />
+              <Text className="text-gray-300 text-sm mt-2">Work Orders</Text>
+              <Text className="text-white text-2xl font-bold mt-1">
+                {loading ? '...' : workOrders?.length || 0}
+              </Text>
+            </BlurView>
+            
+            {/* Total Clients Card */}
+            <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-full md:w-auto md:mb-0 items-center justify-center h-36">
+              <MapPin size={36} color="#38bdf8" />
+              <Text className="text-gray-300 text-sm mt-2">Total Clients</Text>
+              <Text className="text-white text-2xl font-bold mt-1">
+                {loading ? '...' : stats?.clients?.total_clients || getTotalCustomers()}
+              </Text>
+            </BlurView>
+            
+            {/* Total Expenses Card */}
+            <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-full md:w-auto md:mb-0 items-center justify-center h-36">
+              <DollarSign size={36} color="#f87171" />
+              <Text className="text-gray-300 text-sm mt-2">Total Expenses</Text>
+              <Text className="text-white text-2xl font-bold mt-1">
+                {loading ? '...' : `KES ${stats?.expenses?.total_expenses?.toLocaleString() || '0'}`}
+              </Text>
+            </BlurView>
+
+            {/* Low Stock Items Card */}
+            <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-full md:w-auto md:mb-0 items-center justify-center h-36">
+              <Package size={36} color="#facc15" />
+              <Text className="text-gray-300 text-sm mt-2">Low Stock Items</Text>
+              <Text className="text-white text-2xl font-bold mt-1">
+                {loading ? '...' : stats?.inventory?.low_stock_count || inventory?.lowStockItems?.length || 0}
+              </Text>
+            </BlurView>
+            
+            {/* Total Vehicles Card */}
+            <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-full md:w-auto md:mb-0 items-center justify-center h-36">
+              <Car size={36} color="#c084fc" />
+              <Text className="text-gray-300 text-sm mt-2">Total Vehicles</Text>
+              <Text className="text-white text-2xl font-bold mt-1">
+                {loading ? '...' : stats?.cars?.total_cars || 0}
+              </Text>
+            </BlurView>
+          </View>
         </View>
 
-        {/* Financial Overview */}
-        <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8 relative overflow-hidden">
-          <View className="absolute -inset-2 bg-red-500 rounded-2xl blur-xl opacity-15" />
-          <View className="flex-row items-center justify-between mb-6">
-            <Text className="text-xl font-bold text-white">Financial Overview</Text>
-            <BarChart3 size={24} color="#DC2626" />
-          </View>
-          {/* Placeholder for charts */}
-          <View className="flex-row space-x-4">
-            <View className="flex-1 h-40 bg-[#111827] rounded-lg" />
-            <View className="flex-1 h-40 bg-[#111827] rounded-lg" />
-          </View>
-          <Text className="text-white mt-2">Cash Flow: KES 150,000</Text>
-        </BlurView>
-
-        {/* Garage Operations */}
-        <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
-          <Text className="text-xl font-bold text-white mb-4">Garage Operations</Text>
-          <Text className="text-white font-semibold mb-2">Active Work Orders</Text>
-          {activeWorkOrders.map(order => (
-            <View key={order.id} className="bg-white/10 rounded p-3 mb-2">
-              <Text className="text-white">{order.model} - {order.work}</Text>
-              <Text className="text-gray-300 text-sm">Status: {order.working ? 'In Progress' : 'Pending'}</Text>
-            </View>
-          ))}
-          <Text className="text-white font-semibold mt-4 mb-2">Upcoming Appointments</Text>
-          {upcomingAppointments.map(app => (
-            <View key={app.id} className="bg-white/10 rounded p-3 mb-2">
-              <Text className="text-white">{app.customer} - {app.service}</Text>
-              <Text className="text-gray-300 text-sm">Date: {app.date}</Text>
-            </View>
-          ))}
-          <TouchableOpacity className="bg-red-600 rounded p-3 mt-4 items-center">
-            <Text className="text-white font-semibold">Add New Job</Text>
+        {/* Work Orders Section */}
+        <View className={`px-6 md:px-12 mb-8`}>
+          <TouchableOpacity onPress={() => setWorkOrdersCollapsed(!workOrdersCollapsed)} className="flex-row justify-between items-center mb-4">
+            <Text className="text-white text-xl font-semibold">Latest Work Orders</Text>
+            {workOrdersCollapsed ? <ChevronDown size={20} color="white" /> : <ChevronUp size={20} color="white" />}
           </TouchableOpacity>
-        </BlurView>
-
-        {/* Inventory Snapshot */}
-        <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
-          <Text className="text-xl font-bold text-white mb-4">Inventory Snapshot</Text>
-          <Text className="text-white font-semibold mb-2">Low Stock Alerts</Text>
-          {lowStockItems.map(item => (
-            <View key={item.id} className="bg-white/10 rounded p-3 mb-2 flex-row justify-between">
-              <Text className="text-white">{item.name}</Text>
-              <Text className="text-red-500 font-bold">{item.quantity}</Text>
-            </View>
-          ))}
-          <Text className="text-white font-semibold mt-4 mb-2">Expiring Items</Text>
-          {expiringItems.map(item => (
-            <View key={item.id} className="bg-white/10 rounded p-3 mb-2 flex-row justify-between">
-              <Text className="text-white">{item.name}</Text>
-              <Text className="text-yellow-400 font-bold">{item.expiryDate}</Text>
-            </View>
-          ))}
-          <TouchableOpacity className="bg-red-600 rounded p-3 mt-4 items-center">
-            <Text className="text-white font-semibold">Manage Suppliers / Orders</Text>
-          </TouchableOpacity>
-        </BlurView>
-
-        {/* Employee Management */}
-        <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
-          <Text className="text-xl font-bold text-white mb-4">Employee Management</Text>
-          <Text className="text-white font-semibold mb-2">Attendance Summary</Text>
-          {employees.map(emp => (
-            <View key={emp.id} className="bg-white/10 rounded p-3 mb-2 flex-row justify-between">
-              <Text className="text-white">{emp.name}</Text>
-              <Text className="text-green-400">{emp.attendance.present} Present, {emp.attendance.missed} Missed</Text>
-            </View>
-          ))}
-          <Text className="text-white font-semibold mt-4 mb-2">Payroll Overview</Text>
-          {payrollOverview.map(pay => (
-            <View key={pay.id} className="bg-white/10 rounded p-3 mb-2 flex-row justify-between">
-              <Text className="text-white">{pay.employee}</Text>
-              <Text className={`font-bold ${pay.status === 'Paid' ? 'text-green-400' : 'text-yellow-400'}`}>{pay.status}</Text>
-            </View>
-          ))}
-        </BlurView>
-
-        {/* Customer Insights */}
-        <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
-          <Text className="text-xl font-bold text-white mb-4">Customer Insights</Text>
-          <Text className="text-white font-semibold mb-2">Top Customers</Text>
-          {topCustomers.map(cust => (
-            <View key={cust.id} className="bg-white/10 rounded p-3 mb-2 flex-row items-center space-x-3">
-              <Image source={{ uri: cust.avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-              <Text className="text-white">{cust.name}</Text>
-            </View>
-          ))}
-          <Text className="text-white font-semibold mt-4 mb-2">New Customers This Week</Text>
-          {newCustomersThisWeek.map(cust => (
-            <View key={cust.id} className="bg-white/10 rounded p-3 mb-2 flex-row items-center space-x-3">
-              <Image source={{ uri: cust.avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-              <Text className="text-white">{cust.name}</Text>
-            </View>
-          ))}
-          <Text className="text-white font-semibold mt-4 mb-2">Outstanding Balances</Text>
-          {outstandingBalances.map(cust => (
-            <View key={cust.id} className="bg-white/10 rounded p-3 mb-2 flex-row items-center space-x-3 justify-between">
-              <View className="flex-row items-center space-x-3">
-                <Image source={{ uri: cust.avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
-                <Text className="text-white">{cust.name}</Text>
+          <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+            {loading ? <Text className="text-gray-300">Loading work orders...</Text> : (workOrdersCollapsed ? null : (workOrders?.length === 0 ? <Text className="text-gray-300">No work orders found.</Text> : workOrders?.slice(0, 5).map((order) => (
+              <View key={String(order.id)} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+                <ClipboardList size={20} color="#6366f1" />
+                <View className="ml-4 flex-1">
+                  <Text className="text-white font-semibold">
+                    Work Order #{String(order.id).substring(0, 8)}
+                  </Text>
+                  <Text className="text-gray-300 text-sm">
+                    {order.clients?.first_name} {order.clients?.last_name}
+                  </Text>
+                  <Text className="text-gray-400 text-xs">
+                    {order.client_vehicles?.make} - {order.client_vehicles?.licence_plate}
+                  </Text>
+                </View>
+                <View className="flex-col items-end">
+                  <Text className="text-white text-sm font-bold">KES {order.estimated_cost?.toLocaleString() || '0'}</Text>
+                  <Text className="text-gray-400 text-xs">{order.status}</Text>
+                </View>
               </View>
-              <Text className="text-red-500 font-bold">KES {cust.pendingAmount?.toLocaleString()}</Text>
-            </View>
-          ))}
-        </BlurView>
+            ))))}
+          </BlurView>
+        </View>
 
-        {/* Recent Activity Feed */}
-        <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
-          <Text className="text-xl font-bold text-white mb-4">Recent Activity Feed</Text>
-          {recentActivities.map(act => (
-            <View key={act.id} className="bg-white/10 rounded p-3 mb-2">
-              <Text className="text-white font-semibold">{act.type}</Text>
-              <Text className="text-gray-300 text-sm">{act.description}</Text>
-              <Text className="text-gray-400 text-xs">{act.date}</Text>
-            </View>
-          ))}
-        </BlurView>
+        {/* Upcoming Appointments Section */}
+        <View className={`px-6 md:px-12 mb-8`}>
+          <TouchableOpacity onPress={() => setAppointmentsCollapsed(!appointmentsCollapsed)} className="flex-row justify-between items-center mb-4">
+            <Text className="text-white text-xl font-semibold">Upcoming Appointments</Text>
+            {appointmentsCollapsed ? <ChevronDown size={20} color="white" /> : <ChevronUp size={20} color="white" />}
+          </TouchableOpacity>
+          <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+            {loading ? <Text className="text-gray-300">Loading appointments...</Text> : (appointmentsCollapsed ? null : (appointments?.length === 0 ? <Text className="text-gray-300">No upcoming appointments.</Text> : appointments?.slice(0, 5).map((appt) => (
+              <View key={appt.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+                <Clock size={20} color="#facc15" />
+                <View className="ml-4 flex-1">
+                  <Text className="text-white font-semibold">{appt.service_type}</Text>
+                  <Text className="text-gray-300 text-sm">
+                    {appt.clients?.first_name} {appt.clients?.last_name}
+                  </Text>
+                  <Text className="text-gray-400 text-xs">
+                    {appt.client_vehicles?.licence_plate}
+                  </Text>
+                </View>
+                <View className="flex-col items-end">
+                  <Text className="text-gray-300 text-sm">{formattedDate(appt.scheduled_time)}</Text>
+                  <Text className="text-gray-400 text-xs">{appt.status}</Text>
+                </View>
+              </View>
+            ))))}
+          </BlurView>
+        </View>
+        
+        {/* Latest Customers Section */}
+        <View className={`px-6 md:px-12 mb-8`}>
+          <TouchableOpacity onPress={() => setCustomersCollapsed(!customersCollapsed)} className="flex-row justify-between items-center mb-4">
+            <Text className="text-white text-xl font-semibold">Latest Customers</Text>
+            {customersCollapsed ? <ChevronDown size={20} color="white" /> : <ChevronUp size={20} color="white" />}
+          </TouchableOpacity>
+          <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+            {loading ? <Text className="text-gray-300">Loading customers...</Text> : (customersCollapsed ? null : (getCustomersForDisplay().length === 0 ? <Text className="text-gray-300">No customers found.</Text> : getCustomersForDisplay().slice(0, 5).map((customer, index) => (
+              <View key={customer.id || index} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+                <MapPin size={20} color="#38bdf8" />
+                <View className="ml-4 flex-1">
+                  <Text className="text-white font-semibold">{customer.first_name} {customer.last_name}</Text>
+                  {customer.phone_number && (
+                    <Text className="text-gray-300 text-sm">Phone: {customer.phone_number}</Text>
+                  )}
+                  {customer.created_at && (
+                    <Text className="text-gray-400 text-xs">Joined: {formattedDate(customer.created_at)}</Text>
+                  )}
+                </View>
+              </View>
+            ))))}
+          </BlurView>
+        </View>
+
+        {/* Recent Activities Section - Not collapsible */}
+        <View className={`px-6 md:px-12 mb-8`}>
+          <Text className="text-white text-xl font-semibold mb-4">Recent Activities</Text>
+          <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+            {loading ? <Text className="text-gray-300">Loading activities...</Text> : activities?.length === 0 ? <Text className="text-gray-300">No activities found.</Text> : activities?.slice(0, 5).map((act) => (
+              <View key={act.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+                <FileText size={20} color="#a855f7" />
+                <View className="ml-4 flex-1">
+                  <Text className="text-white font-semibold">{act.activity_type}</Text>
+                  <Text className="text-gray-300 text-sm">{act.description}</Text>
+                  <Text className="text-gray-400 text-xs">{formattedDate(act.timestamp)}</Text>
+                </View>
+              </View>
+            ))}
+          </BlurView>
+        </View>
       </ScrollView>
-
-      {/* Footer / Quick Actions */}
-      <View className="h-16 bg-[#0A0F1E] flex-row justify-around items-center border-t border-gray-700">
-        <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
-          <Plus size={20} color="white" />
-          <Text className="text-white font-semibold">Add Job</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
-          <Plus size={20} color="white" />
-          <Text className="text-white font-semibold">Add Expense</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
-          <Plus size={20} color="white" />
-          <Text className="text-white font-semibold">Add Customer</Text>
-        </TouchableOpacity>
-        <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
-          <FileText size={20} color="white" />
-          <Text className="text-white font-semibold">Reports</Text>
-        </TouchableOpacity>
-      </View>
     </View>
-  )
+  );
 }

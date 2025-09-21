@@ -6,10 +6,12 @@ exports.getAllClients = async (req, res) => {
   try {
     const { data: clients, error } = await supabase
       .from('clients')
-      .select('id, first_name, last_name, email, phone_number, address, licence_plate, registration_make, created_at')
+      .select('id, first_name, last_name, email, phone_number, total_spent, licence_plate, registration_make, created_at')
       .order('created_at', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
     res.json({ success: true, clients });
   } catch (error) {
@@ -18,79 +20,71 @@ exports.getAllClients = async (req, res) => {
   }
 };
 
-// @desc    Get a single client by email
-// @route   GET /api/clients/:email
-exports.getClientByEmail = async (req, res) => {
+// @desc    Get a single client with all related data
+// @route   GET /api/clients/:id
+exports.getClientDetails = async (req, res) => {
   try {
-    const { email } = req.params;
+    const { id } = req.params;
 
-    const { data: client, error } = await supabase
+    // Fetch customer details
+    const { data: customer, error: customerError } = await supabase
       .from('clients')
-      .select('id, first_name, last_name, email, phone_number, address, licence_plate, registration_make, created_at')
-      .eq('email', email)
+      .select('*')
+      .eq('id', id)
       .single();
 
-    if (error) {
-      if (error.code === 'PGRST116') {
-        return res.status(404).json({ success: false, message: 'Client not found' });
-      }
-      throw error;
+    if (customerError || !customer) {
+      return res.status(404).json({ success: false, message: 'Client not found' });
     }
 
-    res.json({ success: true, client });
+    // Fetch associated vehicles
+    const { data: vehicles, error: vehiclesError } = await supabase
+      .from('client_vehicles')
+      .select('*')
+      .eq('client_id', id);
+
+    if (vehiclesError) {
+      throw vehiclesError;
+    }
+
+    // Fetch service records for the customer
+    const { data: service_records, error: serviceRecordsError } = await supabase
+      .from('client_services')
+      .select('*')
+      .eq('client_id', id)
+      .order('created_at', { ascending: false });
+
+    if (serviceRecordsError) {
+      throw serviceRecordsError;
+    }
+
+    res.json({
+      success: true,
+      client: {
+        customer,
+        vehicles,
+        service_records,
+      },
+    });
+
   } catch (error) {
-    console.error('Error fetching client by email:', error);
+    console.error('Error fetching client details:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
 
-// @desc    Create a new client
-// @route   POST /api/clients
-exports.createClient = async (req, res) => {
+// @desc    Update a client's details
+// @route   PUT /api/clients/:id
+exports.updateClient = async (req, res) => {
   try {
-    const { first_name, last_name, email, phone_number, address, licence_plate, registration_make } = req.body;
-
-    // Validate required fields
-    if (!first_name || !last_name || !email || !licence_plate) {
-      return res.status(400).json({ success: false, message: 'Missing required fields: first_name, last_name, email, licence_plate' });
-    }
-
-    const { data, error } = await supabase
-      .from('clients')
-      .insert({
-        first_name,
-        last_name,
-        email,
-        phone_number,
-        address,
-        licence_plate,
-        registration_make
-      })
-      .select('id, email, created_at')
-      .single();
-
-    if (error) throw error;
-
-    res.status(201).json({ success: true, message: 'Client created successfully', client: data });
-  } catch (error) {
-    console.error('Error creating client:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
-  }
-};
-
-// @desc    Update a client by email
-// @route   PUT /api/clients/:email
-exports.updateClientByEmail = async (req, res) => {
-  try {
-    const { email } = req.params;
+    const { id } = req.params;
     const updateData = req.body;
 
-    const { data, error } = await supabase
+    const { data: updatedClient, error } = await supabase
       .from('clients')
       .update(updateData)
-      .eq('email', email)
-      .select('id, first_name, last_name, email')
-      .single();
+      .eq('id', id)
+      .select();
 
     if (error) {
       if (error.code === 'PGRST116') {
@@ -99,35 +93,68 @@ exports.updateClientByEmail = async (req, res) => {
       throw error;
     }
 
-    res.json({ success: true, message: 'Client updated successfully', client: data });
+    res.json({ success: true, message: 'Client updated successfully', client: updatedClient });
   } catch (error) {
     console.error('Error updating client:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };
-
-// @desc    Delete a client by email
-// @route   DELETE /api/clients/:email
-exports.deleteClientByEmail = async (req, res) => {
+exports.getClientVehicles = async (req, res) => {
   try {
-    const { email } = req.params;
+    const { id } = req.params;
 
-    const { data: deletedClient, error } = await supabase
-      .from('clients')
-      .delete()
-      .eq('email', email)
-      .select('id, email')
-      .single();
+    const { data: vehicles, error } = await supabase
+      .from('client_vehicles')
+      .select('*')
+      .eq('client_id', id);
 
     if (error) throw error;
 
-    if (!deletedClient) {
-      return res.status(404).json({ success: false, message: 'Client not found' });
+    res.json({ success: true, vehicles });
+  } catch (error) {
+    console.error('Error fetching client vehicles:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+exports.getClientServices = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const { data: services, error } = await supabase
+      .from('client_services')
+      .select('*')
+      .eq('client_id', id)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    res.json({ success: true, services });
+  } catch (error) {
+    console.error('Error fetching client services:', error);
+    res.status(500).json({ success: false, message: 'Internal server error' });
+  }
+};
+exports.updateClientVehicle = async (req, res) => {
+  try {
+    const { vehicleId } = req.params;
+    const updateData = req.body;
+    
+    const { data: updatedVehicle, error } = await supabase
+      .from('client_vehicles')
+      .update(updateData)
+      .eq('id', vehicleId)
+      .select();
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return res.status(404).json({ success: false, message: 'Vehicle not found' });
+      }
+      throw error;
     }
 
-    res.json({ success: true, message: 'Client deleted successfully', client: deletedClient });
+    res.json({ success: true, message: 'Vehicle updated successfully', vehicle: updatedVehicle });
   } catch (error) {
-    console.error('Error deleting client:', error);
+    console.error('Error updating vehicle:', error);
     res.status(500).json({ success: false, message: 'Internal server error' });
   }
 };

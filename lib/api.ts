@@ -1,7 +1,13 @@
 const API_BASE_URL = 'http://localhost:3001/api';
 
 export interface LoginRequest {
-  username: string;
+  email: string;
+  password: string;
+}
+
+export interface RegisterRequest {
+  name: string;
+  email: string;
   password: string;
 }
 
@@ -12,6 +18,21 @@ export interface LoginResponse {
     id: number;
     name: string;
     role: string;
+    email?: string;
+    token: string;
+  };
+  message?: string;
+}
+
+export interface RegisterResponse {
+  success: boolean;
+  token?: string;
+  user?: {
+    user_id: number;
+    first_name: string;
+    role: string;
+    email: string;
+    token?: string;
   };
   message?: string;
 }
@@ -19,7 +40,9 @@ export interface LoginResponse {
 export interface AuthUser {
   id: number;
   name: string;
-  role: 'superadmin' | 'admin' | 'operator';
+  role: 'super-admin' | 'admin' | 'operator';
+  email?: string;
+  token: string;
 }
 
 class ApiService {
@@ -62,6 +85,31 @@ class ApiService {
       return data;
     } catch (error) {
       console.error('Login error:', error);
+      return {
+        success: false,
+        message: 'Network error. Please try again.',
+      };
+    }
+  }
+
+  // ADD THE MISSING REGISTER METHOD
+  async register(userData: RegisterRequest): Promise<RegisterResponse> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/register`, {
+        method: 'POST',
+        headers: this.getHeaders(),
+        body: JSON.stringify(userData),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.token) {
+        this.setToken(data.token);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Registration error:', error);
       return {
         success: false,
         message: 'Network error. Please try again.',

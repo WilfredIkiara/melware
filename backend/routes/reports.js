@@ -1,10 +1,13 @@
 const express = require('express');
 const router = express.Router();
-const { generateMonthlyReport } = require('../controllers/reportsController');
-const { authenticateToken, requireReadAccess } = require('../middleware/authMiddleware');
+const reportsController = require('../controllers/reportsController');
 
-// @route GET /api/reports/monthly
-// @desc  Generate monthly Excel report
-router.get('/monthly', authenticateToken, requireReadAccess, generateMonthlyReport);
+// Define API routes for each report type
+router.get('/financial', reportsController.getFinancialReport);
+router.get('/clients', reportsController.getClientsReport);
+router.get('/staff', reportsController.getStaffReport);
+router.get('/inventory', reportsController.getInventoryReport);
+router.get('/carYard', reportsController.getCarYardReport);
+router.get('/transactions', reportsController.getTransactionsReport);
 
 module.exports = router;

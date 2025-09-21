@@ -5,16 +5,16 @@ const supabase = require('../db');
 // controllers/authController.js - login function
 exports.login = async (req, res) => {
   try {
-    const { username, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ success: false, message: 'Username and password are required' });
+    if (!email || !password) {
+      return res.status(400).json({ success: false, message: 'email and password are required' });
     }
 
     const { data: userQuery, error: userError } = await supabase
       .from('users')
       .select('*')
-      .eq('name', username)
+      .eq('email', email)
       .single();
 
     if (userError || !userQuery) {
@@ -31,8 +31,8 @@ exports.login = async (req, res) => {
     // Generate JWT token using the secret from environment variables
     const token = jwt.sign(
       { 
-        id: user.id, 
-        name: user.name, 
+        id: user.user_id, 
+        name: user.first_name, 
         role: user.role,
         email: user.email 
       },
@@ -44,8 +44,8 @@ exports.login = async (req, res) => {
       success: true,
       token,
       user: {
-        id: user.id,
-        name: user.name,
+        id: user.user_id, 
+        name: user.first_name, 
         role: user.role,
         email: user.email
       }

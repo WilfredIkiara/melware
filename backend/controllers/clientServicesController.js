@@ -43,7 +43,7 @@ exports.getClientServicesByEmail = async (req, res) => {
 // @route   POST /api/client-services
 exports.createClientService = async (req, res) => {
   try {
-    const { email, service_type, service_cost, paid_status, notes, staff_id } = req.body;
+    const { email, service_type, service_cost, paid_status, notes, staff_id, service_expenses } = req.body;
     const clientId = await getClientIdByEmail(email);
 
     if (!clientId) {
@@ -52,7 +52,15 @@ exports.createClientService = async (req, res) => {
 
     const { data: newService, error: insertError } = await supabase
       .from('client_services')
-      .insert({ client_id: clientId, service_type, service_cost, paid_status, notes, staff_id })
+      .insert({ 
+        client_id: clientId, 
+        service_type, 
+        service_cost, 
+        paid_status, 
+        notes, 
+        staff_id,
+        service_expenses: service_expenses || '0'
+      })
       .select('*')
       .single();
 

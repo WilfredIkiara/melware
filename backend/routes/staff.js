@@ -10,18 +10,17 @@ const { requireReadAccess, requireWriteAccess } = require('../middleware/roleMid
 
 router.get(
   '/',
-  authenticateToken,
-  requireReadAccess,
+  // authenticateToken,
+  // requireReadAccess,
   staffController.getAllStaff
 );
 
 router.get(
-  '/:email',
+  '/:id',
   authenticateToken,
   requireReadAccess,
-  staffController.getStaffByEmail
+  staffController.getStaffById
 );
-
 
 router.post(
   '/',
@@ -30,20 +29,24 @@ router.post(
   staffController.createStaff
 );
 
-
 router.put(
-  '/:email',
+  '/:id',
   authenticateToken,
   requireWriteAccess,
-  staffController.updateStaffByEmail
+  staffController.updateStaffById
 );
-
 
 router.delete(
-  '/:email',
+  '/:id',
   authenticateToken,
   requireWriteAccess,
-  staffController.deleteStaffByEmail
+  staffController.deleteStaffById
 );
 
+router.get(
+  '/:id/details',
+  // authenticateToken,
+  // requireReadAccess,
+  staffController.getStaffDetails
+);
 module.exports = router;

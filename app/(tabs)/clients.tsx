@@ -1,127 +1,249 @@
-import React, { useMemo, useState } from 'react'
-import { View, Text, TextInput, FlatList, Image, Pressable, Modal, TouchableOpacity, Share } from 'react-native'
-import { BlurView } from 'expo-blur'
-import { User, Search, Calendar, Pencil, Phone, MessageSquare, BadgeCheck, AlertTriangle, Download, Users,CarIcon, Settings, MapPin,Bell } from 'lucide-react'
-import { useApp } from '../../lib/store'
-import { formatISODate, toCSV } from '../../lib/utils'
-import * as Linking from 'expo-linking'
 
-export default function ClientsPage() {
+import { BlurView } from 'expo-blur';
+import { useRouter } from 'expo-router';
+import { RotateCcw, Search, UserPlus } from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
+import { GradientCard } from '../../lib/components/GradientCard';
+import { Colors } from '../../lib/constants/colors';
+import { useClientData } from '../../lib/pages/clientData';
 
-  const branchName = "Main Branch"
-  const todayStats = {
-    revenue: 25000,
-    jobsCompleted: 12,
-    pendingJobs: 5,
-    expenses: 5000,
-    staffAttendance: 8 // out of 10
-  }
-  const { clients, updateClient } = useApp()
-  const [q, setQ] = useState('')
-  const [dateFrom, setDateFrom] = useState<string | null>(null)
-  const [selected, setSelected] = useState<string | null>(null)
-  const current = useMemo(() => clients.find(c => c.id === selected) || null, [clients, selected])
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number: string;
+  total_spent: number;
+}
 
-  const filtered = clients.filter(c => {
-    const matchQ = `${c.name} ${c.phone} ${c.email}`.toLowerCase().includes(q.toLowerCase())
-    const matchDate = !dateFrom || c.createdAt >= dateFrom
-    return matchQ && matchDate
-  })
+export default function Clients() {
+  const router = useRouter();
+  const { clients, loading, error, fetchClients } = useClientData();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newClient, setNewClient] = useState({
+    first_name: '',
+    last_name: '',
+    email: '',
+    phone_number: '',
+  });
 
-  const onRemindWhatsApp = (phone: string, name: string, amount = 0) => {
-    const msg = encodeURIComponent(`Hi ${name}, this is Tristar Garage. You have a pending balance of KES ${amount}. Kindly clear it. Thank you.`)
-    const url = `whatsapp://send?phone=${phone}&text=${msg}`
-    Linking.openURL(url).catch(() => {})
-  }
+  useEffect(() => {
+    fetchClients();
+  }, [fetchClients]);
 
-  const onExport = async () => {
-    const csv = toCSV(clients.map(c => ({ id: c.id, name: c.name, phone: c.phone, email: c.email, pending: c.pending ? 'YES' : 'NO', cars: c.cars.join('|'), createdAt: c.createdAt })))
-    try { await Share.share({ message: csv }) } catch {}
-  }
+  const filteredClients = useMemo(() => {
+    if (!clients) return [];
+    const lowerCaseQuery = searchQuery.toLowerCase();
+    return clients.filter(client =>
+      client.first_name.toLowerCase().includes(lowerCaseQuery) ||
+      client.last_name.toLowerCase().includes(lowerCaseQuery) ||
+      client.email.toLowerCase().includes(lowerCaseQuery) ||
+      client.phone_number.toLowerCase().includes(lowerCaseQuery)
+    );
+  }, [clients, searchQuery]);
 
-  return (
-    <View className="flex-1 bg-[#0A0F1E] pt-14">
-      <View className="flex-row justify-between items-center px-4 mb-3">
-        <Text className="text-white text-2xl font-bold">Clients</Text>
-        <View className="flex-row items-center space-x-6">
-          <TouchableOpacity>
-            <Bell size={24} color="red" />
-          </TouchableOpacity>
-          <TouchableOpacity className="flex-row items-center space-x-1 bg-white/10 rounded px-3 py-1">
-            <MapPin size={16} color="green" />
-            <Text className="text-white">{branchName}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity>
-            <Settings size={24} color="white" />
-          </TouchableOpacity>
-          
-        </View>
-        <User size={26} color="white" />
+  const handleAddClient = async () => {
+    try {
+      console.log("Adding new client:", newClient);
+      // API call implementation here
+      setNewClient({ first_name: '', last_name: '', email: '', phone_number: '' });
+      setShowAddModal(false);
+    } catch (err) {
+      console.error("Error adding client:", err);
+    }
+  };
+
+  if (loading) {
+    return (
+      <View className="flex-1 bg-[#0A0F1E] justify-center items-center">
+        <ActivityIndicator size="large" color={Colors.primary} />
+        <Text className="text-white mt-4 text-lg">Loading clients...</Text>
       </View>
+    );
+  }
 
-      {/* Search + export */}
-      <View className="px-4 gap-3 mb-2">
-        <View className="flex-row items-center bg-white/10 rounded-xl px-3 py-2">
-          <Search size={18} color="white" />
-          <TextInput placeholder="Search by name/phone/email" placeholderTextColor="#9ca3af" value={q} onChangeText={setQ} className="flex-1 text-white ml-2" />
-          <Calendar size={18} color="white" />
-        </View>
-        <TouchableOpacity onPress={onExport} className="self-start bg-white/10 px-3 py-2 rounded-xl flex-row items-center">
-          <Download size={16} color="white" />
-          <Text className="text-white ml-2">Export CSV</Text>
+  if (error) {
+    return (
+      <View className="flex-1 bg-[#0A0F1E] justify-center items-center p-6">
+        <Text className="text-red-400 text-lg text-center mb-4">Error: {error}</Text>
+        <TouchableOpacity onPress={fetchClients} className="bg-blue-600 px-6 py-3 rounded-xl">
+          <Text className="text-white font-semibold">Try Again</Text>
         </TouchableOpacity>
       </View>
+    );
+  }
 
-      <FlatList
-        contentContainerStyle={{ padding: 16 }}
-        data={filtered}
-        keyExtractor={(item) => item.id}
-        ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
-        renderItem={({ item }) => (
-          <BlurView intensity={50} tint="dark" className="rounded-2xl overflow-hidden">
-            <View className="flex-row items-center p-4 gap-3">
-              <Image source={{ uri: item.avatar }} style={{ width: 56, height: 56, borderRadius: 9999 }} />
-              <View className="flex-1">
-                <Text className="text-white font-bold text-lg">{item.name}</Text>
-                <Text className="text-gray-300 text-xs">{item.phone} • {item.email}</Text>
-                <Text className="text-gray-400 text-xs">Cars: {item.cars.join(', ')}</Text>
-                <View className="flex-row items-center mt-1">
-                  {item.pending ? (
-                    <AlertTriangle size={16} color="#f87171" />
-                  ) : (
-                    <BadgeCheck size={16} color="#34d399" />
-                  )}
-                  <Text className={`ml-1 text-xs ${item.pending ? 'text-red-400' : 'text-green-400'}`}>{item.pending ? 'Pending balance' : 'Cleared'}</Text>
+  const renderClientItem = ({ item }: { item: Customer }) => (
+    <TouchableOpacity
+      onPress={() => router.push({ pathname: "/ClientDetails", params: { id: item.id } })}
+      className="mb-4"
+    >
+      <GradientCard colors={Colors.gradient.darkToDarker}>
+        <View className="flex-row items-center">
+          <View className="bg-purple-600 rounded-full w-14 h-14 items-center justify-center mr-4">
+            <Text className="text-white font-bold text-xl">
+              {item.first_name[0]}{item.last_name[0]}
+            </Text>
+          </View>
+          <View className="flex-1">
+            <Text className="text-white font-semibold text-lg">
+              {item.first_name} {item.last_name}
+            </Text>
+            <Text className="text-gray-400 text-sm">{item.email}</Text>
+            <Text className="text-gray-400 text-sm">{item.phone_number}</Text>
+          </View>
+          <View className="items-end">
+            <Text className="text-green-400 text-lg font-semibold">
+              ${item.total_spent?.toLocaleString() || 0}
+            </Text>
+            <Text className="text-gray-400 text-xs">Total Spent</Text>
+          </View>
+        </View>
+      </GradientCard>
+    </TouchableOpacity>
+  );
+
+  return (
+    <View className="flex-1 bg-[#0A0F1E] p-4 pt-14">
+      {/* Header */}
+      <View className="flex-row justify-between items-center mb-6">
+        <Text className="text-white text-3xl font-bold">Clients</Text>
+        <View className="flex-row space-x-3">
+          <TouchableOpacity
+            onPress={fetchClients}
+            className="p-3 bg-gray-700 rounded-full"
+          >
+            <RotateCcw size={20} color="white" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setShowAddModal(true)}
+            className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 rounded-xl flex-row items-center space-x-2"
+          >
+            <UserPlus size={20} color="white" />
+            <Text className="text-white font-semibold">Add Client</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search */}
+      <View className="relative mb-6">
+        <TextInput
+          className="bg-gray-800 text-white p-4 pl-12 rounded-xl text-base border border-gray-700"
+          placeholder="Search clients..."
+          placeholderTextColor="#9ca3af"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+        />
+        <Search size={20} color="#9ca3af" className="absolute left-4 top-4" />
+      </View>
+
+      {/* Clients List */}
+      {filteredClients.length > 0 ? (
+        <FlatList
+          data={filteredClients}
+          renderItem={renderClientItem}
+          keyExtractor={(item) => item.id}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 20 }}
+        />
+      ) : (
+        <View className="flex-1 justify-center items-center py-12">
+          <Text className="text-gray-400 text-lg">No clients found</Text>
+        </View>
+      )}
+
+      {/* Add Client Modal */}
+      <Modal
+        animationType="fade"
+        transparent={true}
+        visible={showAddModal}
+        onRequestClose={() => setShowAddModal(false)}
+      >
+        <BlurView intensity={20} className="flex-1 justify-center items-center p-4">
+          <View className="w-full max-w-md bg-gray-800 rounded-2xl border border-gray-700 p-6">
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className="text-white text-2xl font-bold">Add New Client</Text>
+              <TouchableOpacity onPress={() => setShowAddModal(false)}>
+                <Text className="text-gray-400 text-2xl">×</Text>
+              </TouchableOpacity>
+            </View>
+
+            <View className="space-y-4">
+              <View className="flex-row space-x-3">
+                <View className="flex-1">
+                  <Text className="text-gray-400 text-sm mb-2">First Name</Text>
+                  <TextInput
+                    placeholder="First name"
+                    placeholderTextColor="#6b7280"
+                    value={newClient.first_name}
+                    onChangeText={(v) => setNewClient({ ...newClient, first_name: v })}
+                    className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                  />
+                </View>
+                <View className="flex-1">
+                  <Text className="text-gray-400 text-sm mb-2">Last Name</Text>
+                  <TextInput
+                    placeholder="Last name"
+                    placeholderTextColor="#6b7280"
+                    value={newClient.last_name}
+                    onChangeText={(v) => setNewClient({ ...newClient, last_name: v })}
+                    className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                  />
                 </View>
               </View>
-              <View className="gap-3">
-                <Pressable onPress={() => setSelected(item.id)} className="bg-white/10 px-3 py-2 rounded-xl">
-                  <Pencil size={18} color="white" />
-                </Pressable>
-                <Pressable onPress={() => onRemindWhatsApp(item.phone, item.name, item.pendingAmount || 0)} className="bg-red-600 px-3 py-2 rounded-xl">
-                  <MessageSquare size={18} color="white" />
-                </Pressable>
+
+              <View>
+                <Text className="text-gray-400 text-sm mb-2">Email</Text>
+                <TextInput
+                  placeholder="Email address"
+                  placeholderTextColor="#6b7280"
+                  value={newClient.email}
+                  onChangeText={(v) => setNewClient({ ...newClient, email: v })}
+                  className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                  keyboardType="email-address"
+                />
+              </View>
+
+              <View>
+                <Text className="text-gray-400 text-sm mb-2">Phone</Text>
+                <TextInput
+                  placeholder="Phone number"
+                  placeholderTextColor="#6b7280"
+                  value={newClient.phone_number}
+                  onChangeText={(v) => setNewClient({ ...newClient, phone_number: v })}
+                  className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                  keyboardType="phone-pad"
+                />
               </View>
             </View>
-          </BlurView>
-        )}
-      />
 
-      {/* Edit Modal */}
-      <Modal visible={!!selected} animationType="slide" transparent onRequestClose={() => setSelected(null)}>
-        <View className="flex-1 bg-black/70 justify-center items-center px-4">
-          <BlurView intensity={70} tint="dark" className="w-full rounded-2xl p-5">
-            <Text className="text-white text-xl font-bold mb-3">Edit Client</Text>
-            <TextInput defaultValue={current?.name} placeholder="Name" placeholderTextColor="#9ca3af" className="bg-white/10 text-white px-4 py-3 rounded-xl mb-2" onChangeText={(v)=>current && (current.name=v)} />
-            <TextInput defaultValue={current?.phone} placeholder="Phone" placeholderTextColor="#9ca3af" className="bg-white/10 text-white px-4 py-3 rounded-xl mb-2" onChangeText={(v)=>current && (current.phone=v)} />
-            <TextInput defaultValue={current?.email} placeholder="Email" placeholderTextColor="#9ca3af" className="bg-white/10 text-white px-4 py-3 rounded-xl mb-2" onChangeText={(v)=>current && (current.email=v)} />
-            <View className="flex-row gap-3 mt-2">
-              <TouchableOpacity onPress={()=>{ if(current){ updateClient(current.id, current) }; setSelected(null)}} className="flex-1 bg-red-600 py-3 rounded-xl"><Text className="text-white text-center font-semibold">Save</Text></TouchableOpacity>
-              <TouchableOpacity onPress={()=>setSelected(null)} className="flex-1 bg-white/10 py-3 rounded-xl"><Text className="text-white text-center">Cancel</Text></TouchableOpacity>
+            <View className="flex-row space-x-3 mt-6">
+              <TouchableOpacity
+                onPress={() => setShowAddModal(false)}
+                className="flex-1 bg-gray-700 py-3 rounded-lg"
+              >
+                <Text className="text-white text-center font-semibold">Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={handleAddClient}
+                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg"
+              >
+                <Text className="text-white text-center font-semibold">Add Client</Text>
+              </TouchableOpacity>
             </View>
-          </BlurView>
-        </View>
+          </View>
+        </BlurView>
       </Modal>
     </View>
-  )
+  );
 }
