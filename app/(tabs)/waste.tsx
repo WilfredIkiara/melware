@@ -5037,3 +5037,3951 @@ export default function WasteScreen() {
 //     </View>
 //   );
 // }
+
+// import { BlurView } from 'expo-blur';
+// import { useRouter } from 'expo-router';
+// import { Bell, Car, ClipboardList, Clock, DollarSign, FileText, LogOut, MapPin, Package } from 'lucide-react';
+// import React from 'react';
+// import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+// import { useAuth } from '../../lib/auth';
+// import { useSuperAdminData } from '../../lib/pages/useSuperAdminData';
+
+// // Define the types that match your backend response
+// interface CustomerData {
+//   id?: string;
+//   first_name: string;
+//   last_name: string;
+//   phone_number?: string;
+//   total_spent?: number;
+//   created_at?: string;
+//   balance?: number;
+// }
+
+// interface Activity {
+//   id: string;
+//   profile: { name: string };
+//   activity_type: string;
+//   description: string;
+//   timestamp: string;
+// }
+
+// export default function SuperAdmin() {
+//   const { stats, activities, workOrders, appointments, financials, inventory, customers, staff, loading, error } = useSuperAdminData();
+  
+//   const { user, logout } = useAuth();
+//   const router = useRouter();
+//   const branchName = "Main Branch";
+
+//   const handleLogout = () => {
+//     Alert.alert(
+//       "Logout",
+//       "Are you sure you want to logout?",
+//       [
+//         { text: "Cancel", style: "cancel" },
+//         {
+//           text: "Logout",
+//           style: "destructive",
+//           onPress: async () => {
+//             await logout();
+//             router.replace('/login');
+//           }
+//         }
+//       ]
+//     );
+//   };
+  
+//   // A helper function for the quick action buttons
+//   const handleQuickAction = (action: string) => {
+//     Alert.alert(
+//       "Action Triggered",
+//       `The "${action}" action has been initiated. This would typically trigger an API call to the backend.`
+//     );
+//   };
+
+//   const formattedDate = (dateString?: string) => {
+//     if (!dateString) return "N/A";
+//     const date = new Date(dateString);
+//     if (isNaN(date.getTime())) return "Invalid Date";
+//     return date.toLocaleDateString();
+//   };
+
+//   // Helper function to get total customers count from nested structure
+//   const getTotalCustomers = () => {
+//     if (!customers) return 0;
+//     // Check if customers is an array (flat structure) or object with nested arrays
+//     if (Array.isArray(customers)) {
+//       return customers.length;
+//     } else {
+//       // Handle nested structure
+//       const topCustomers = customers.topCustomers?.length || 0;
+//       const newCustomers = customers.newCustomersThisWeek?.length || 0;
+//       const outstanding = customers.outstandingBalances?.length || 0;
+//       return topCustomers + newCustomers + outstanding;
+//     }
+//   };
+
+//   // Helper to get flat customers array for display
+//   const getCustomersForDisplay = () => {
+//     if (!customers) return [];
+//     if (Array.isArray(customers)) {
+//       return customers;
+//     } else {
+//       // Combine all customer arrays from nested structure
+//       return [
+//         ...(customers.topCustomers || []),
+//         ...(customers.newCustomersThisWeek || []),
+//         ...(customers.outstandingBalances || [])
+//       ];
+//     }
+//   };
+
+//   if (loading) {
+//     return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-white text-2xl">Loading...</Text></View>;
+//   }
+
+//   if (error) {
+//     return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-red-500 text-2xl">Error: {error}</Text></View>;
+//   }
+
+//   return (
+//     <View className="flex-1 bg-[#1A2033] pt-12">
+//       <ScrollView contentContainerStyle={{ paddingBottom: 120 }}>
+//         {/* Header Section */}
+//         <View className="px-6 py-4 flex-row justify-between items-center">
+//           <View>
+//             <Text className="text-white text-3xl font-bold">Hello, {user?.name || "Super Admin"}</Text>
+//             <Text className="text-gray-400 text-sm">{branchName}</Text>
+//           </View>
+//           <View className="flex-row items-center space-x-4">
+//             <TouchableOpacity onPress={() => router.push('/notifications' as any)}>
+//               <Bell size={24} color="white" />
+//             </TouchableOpacity>
+//             <TouchableOpacity onPress={handleLogout}>
+//               <LogOut size={24} color="white" />
+//             </TouchableOpacity>
+//           </View>
+//         </View>
+
+//         {/* Dashboard Cards Section */}
+//         <View className="p-6">
+//           <View className="flex-row flex-wrap justify-between">
+//             {/* Total Revenue Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <DollarSign size={36} color="#4ade80" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Revenue</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : `KES ${stats?.financials?.total_revenue?.toLocaleString() || '0'}`}
+//               </Text>
+//             </BlurView>
+
+//             {/* Total Work Orders Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <ClipboardList size={36} color="#6366f1" />
+//               <Text className="text-gray-300 text-sm mt-2">Work Orders</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : workOrders?.length || 0}
+//               </Text>
+//             </BlurView>
+            
+//             {/* Total Clients Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <MapPin size={36} color="#38bdf8" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Clients</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : stats?.clients?.total_clients || getTotalCustomers()}
+//               </Text>
+//             </BlurView>
+            
+//             {/* Total Expenses Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <DollarSign size={36} color="#f87171" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Expenses</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : `KES ${stats?.expenses?.total_expenses?.toLocaleString() || '0'}`}
+//               </Text>
+//             </BlurView>
+
+//             {/* Low Stock Items Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <Package size={36} color="#facc15" />
+//               <Text className="text-gray-300 text-sm mt-2">Low Stock Items</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : stats?.inventory?.low_stock_count || inventory?.lowStockItems?.length || 0}
+//               </Text>
+//             </BlurView>
+            
+//             {/* Total Vehicles Card */}
+//             <BlurView intensity={30} tint="dark" className="bg-white/10 p-4 rounded-xl mb-4 w-[48%] items-center justify-center h-36">
+//               <Car size={36} color="#c084fc" />
+//               <Text className="text-gray-300 text-sm mt-2">Total Vehicles</Text>
+//               <Text className="text-white text-2xl font-bold mt-1">
+//                 {loading ? '...' : stats?.cars?.total_cars || 0}
+//               </Text>
+//             </BlurView>
+//           </View>
+//         </View>
+
+//         {/* Work Orders Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Latest Work Orders</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading work orders...</Text> : workOrders?.length === 0 ? <Text className="text-gray-300">No work orders found.</Text> : workOrders?.slice(0, 5).map((order) => (
+//               <View key={order.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <ClipboardList size={20} color="#6366f1" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">
+//                     Work Order #{String(order.id).substring(0, 8)}
+//                   </Text>
+//                   <Text className="text-gray-300 text-sm">
+//                     {order.clients?.first_name} {order.clients?.last_name}
+//                   </Text>
+//                   <Text className="text-gray-400 text-xs">
+//                     {order.client_vehicles?.make} - {order.client_vehicles?.licence_plate}
+//                   </Text>
+//                 </View>
+//                 <View className="flex-col items-end">
+//                   <Text className="text-white text-sm font-bold">KES {order.estimated_cost?.toLocaleString() || '0'}</Text>
+//                   <Text className="text-gray-400 text-xs">{order.status}</Text>
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+
+//         {/* Upcoming Appointments Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Upcoming Appointments</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading appointments...</Text> : appointments?.length === 0 ? <Text className="text-gray-300">No upcoming appointments.</Text> : appointments?.slice(0, 5).map((appt) => (
+//               <View key={appt.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <Clock size={20} color="#facc15" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">{appt.service_type}</Text>
+//                   <Text className="text-gray-300 text-sm">
+//                     {appt.clients?.first_name} {appt.clients?.last_name}
+//                   </Text>
+//                   <Text className="text-gray-400 text-xs">
+//                     {appt.client_vehicles?.licence_plate}
+//                   </Text>
+//                 </View>
+//                 <View className="flex-col items-end">
+//                   <Text className="text-gray-300 text-sm">{formattedDate(appt.scheduled_time)}</Text>
+//                   <Text className="text-gray-400 text-xs">{appt.status}</Text>
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+        
+//         {/* Latest Customers Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Latest Customers</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading customers...</Text> : getCustomersForDisplay().length === 0 ? <Text className="text-gray-300">No customers found.</Text> : getCustomersForDisplay().slice(0, 5).map((customer, index) => (
+//               <View key={customer.id || index} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <MapPin size={20} color="#38bdf8" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">{customer.first_name} {customer.last_name}</Text>
+//                   {customer.phone_number && (
+//                     <Text className="text-gray-300 text-sm">Phone: {customer.phone_number}</Text>
+//                   )}
+//                   {customer.created_at && (
+//                     <Text className="text-gray-400 text-xs">Joined: {formattedDate(customer.created_at)}</Text>
+//                   )}
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+
+//         {/* Recent Activities Section */}
+//         <View className="px-6 mb-8">
+//           <Text className="text-white text-xl font-semibold mb-4">Recent Activities</Text>
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 rounded-xl p-4">
+//             {loading ? <Text className="text-gray-300">Loading activities...</Text> : activities?.length === 0 ? <Text className="text-gray-300">No activities found.</Text> : activities?.slice(0, 5).map((act) => (
+//               <View key={act.id} className="flex-row items-center border-b border-gray-700 py-3 last:border-b-0">
+//                 <FileText size={20} color="#a855f7" />
+//                 <View className="ml-4 flex-1">
+//                   <Text className="text-white font-semibold">{act.activity_type}</Text>
+//                   <Text className="text-gray-300 text-sm">{act.description}</Text>
+//                   <Text className="text-gray-400 text-xs">{formattedDate(act.timestamp)}</Text>
+//                 </View>
+//               </View>
+//             ))}
+//           </BlurView>
+//         </View>
+//       </ScrollView>
+
+//       {/* Footer / Quick Actions */}
+//       {/* <View className="absolute bottom-0 w-full h-20 bg-[#0A0F1E] flex-row justify-around items-center border-t border-gray-700">
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Add Job')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Add Job</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Add Expense')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Add Expense</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Add Customer')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Add Customer</Text>
+//         </TouchableOpacity>
+//         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded-full px-4 py-2" onPress={() => handleQuickAction('Manage Suppliers')}>
+//           <Plus size={20} color="white" />
+//           <Text className="text-white font-semibold">Manage Suppliers</Text>
+//         </TouchableOpacity>
+//       </View> */}
+//     </View>
+//   );
+// }
+
+// import { useLocalSearchParams, useRouter } from 'expo-router';
+// import { DollarSign, Edit, Plus, Save, X } from 'lucide-react-native';
+// import React, { useEffect, useState } from 'react';
+// import {
+//   ActivityIndicator,
+//   Alert,
+//   ScrollView,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from 'react-native';
+// import { useClientData } from '../../lib/pages/clientData';
+
+// interface VehicleFormData {
+//   id: string; // Add id for editing
+//   make: string;
+//   licence_plate: string;
+//   engine_type?: string;
+//   notes?: string;
+//   mileage?: string;
+//   color?: string;
+// }
+
+// interface ClientDetailsProps {
+//   onGoBack: () => void;
+//   onAddVehicle: (clientId: string) => void;
+//   onAddService: (clientId: string) => void;
+// }
+
+// export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: Omit<ClientDetailsProps, 'clientId'>) {
+//   const { id } = useLocalSearchParams();
+//   const router = useRouter();
+//   const actualClientId = id as string;
+//   const {
+//     clientDetails,
+//     clientVehicles,
+//     clientServices,
+//     loading,
+//     error,
+//     fetchClientDetails,
+//     updateClientDetails,
+//     updateClientVehicle,
+//   } = useClientData();
+
+//   const [isEditingClient, setIsEditingClient] = useState(false);
+//   const [clientEditData, setClientEditData] = useState({
+//     first_name: '',
+//     last_name: '',
+//     email: '',
+//     phone_number: '',
+//     address: '',
+//   });
+//   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
+//   const [vehicleEditData, setVehicleEditData] = useState<Partial<VehicleFormData> | null>(null);
+
+
+//   useEffect(() => {
+//     if (actualClientId) {
+//       fetchClientDetails(actualClientId);
+//     }
+//   }, [actualClientId, fetchClientDetails]);
+
+//   useEffect(() => {
+//     if (clientDetails?.customer) {
+//       setClientEditData({
+//         first_name: clientDetails.customer.first_name,
+//         last_name: clientDetails.customer.last_name,
+//         email: clientDetails.customer.email,
+//         phone_number: clientDetails.customer.phone_number,
+//         address: clientDetails.customer.address || '',
+//       });
+//     }
+//   }, [clientDetails]);
+//   const handleGoBack = () => {
+//     router.back();
+//   };
+
+//   const handleAddVehicle = () => {
+//     router.push(`/AddVehicle?clientId=${actualClientId}`);
+//   };
+
+//   const handleAddService = () => {
+//     router.push(`/AddService?clientId=${actualClientId}`);
+//   };
+//   const handleEditClient = () => {
+//     setIsEditingClient(true);
+//   };
+
+//   const handleSaveClient = async () => {
+//     try {
+//       await updateClientDetails(actualClientId, clientEditData);
+//       setIsEditingClient(false);
+//       Alert.alert('Success', 'Client details updated successfully!');
+//     } catch (e) {
+//       Alert.alert('Error', 'Failed to save client details.');
+//     }
+//   };
+
+//   const handleEditVehicle = (vehicle: any) => {
+//     setEditingVehicleId(vehicle.id);
+//     setVehicleEditData({ ...vehicle, mileage: vehicle.mileage?.toString() });
+//   };
+
+//   const handleSaveVehicle = async () => {
+//     if (!vehicleEditData || !editingVehicleId) return;
+
+//     try {
+//       const formattedData = {
+//         ...vehicleEditData,
+//         mileage: vehicleEditData.mileage ? parseFloat(vehicleEditData.mileage) : undefined,
+//       };
+//       await updateClientVehicle(editingVehicleId, formattedData);
+//       setEditingVehicleId(null);
+//       setVehicleEditData(null);
+//       Alert.alert('Success', 'Vehicle details updated successfully!');
+//       fetchClientDetails(actualClientId); // Refresh data
+//     } catch (e) {
+//       Alert.alert('Error', 'Failed to save vehicle details.');
+//     }
+//   };
+
+//   const handleCancelEdit = () => {
+//     setIsEditingClient(false);
+//     setEditingVehicleId(null);
+//   };
+
+//   const formatDate = (dateString: string) => {
+//     return new Date(dateString).toLocaleDateString('en-US', {
+//       year: 'numeric',
+//       month: 'long',
+//       day: 'numeric',
+//     });
+//   };
+
+//   const formatCurrency = (amount: number) => {
+//     return new Intl.NumberFormat('en-US', {
+//       style: 'currency',
+//       currency: 'KES',
+//     }).format(amount);
+//   };
+
+//   if (loading) {
+//     return (
+//       <View className="flex-1 justify-center items-center bg-[#0A0F1E]">
+//         <ActivityIndicator size="large" color="#4F46E5" />
+//       </View>
+//     );
+//   }
+
+//   if (error || !clientDetails?.customer) {
+//     return (
+//       <View className="flex-1 justify-center items-center bg-[#0A0F1E] p-4">
+//         <Text className="text-red-500 text-lg text-center">{error || 'Client not found.'}</Text>
+//         <TouchableOpacity onPress={onGoBack} className="mt-4 bg-gray-700 px-4 py-2 rounded-lg">
+//           <Text className="text-white">Go Back</Text>
+//         </TouchableOpacity>
+//       </View>
+//     );
+//   }
+
+//   const { customer, vehicles, service_records } = clientDetails;
+
+//   return (
+//     <ScrollView className="flex-1 bg-[#0A0F1E] p-4 pt-14">
+//       <View className="flex-row justify-between items-center mb-5">
+//         <TouchableOpacity onPress={onGoBack} className="p-3 bg-gray-700 rounded-full">
+//           <X size={20} color="white" />
+//         </TouchableOpacity>
+//         <Text className="text-white text-3xl font-bold">Client Details</Text>
+//         <View className="w-10" />
+//       </View>
+
+//       {/* Client Details Section */}
+//       <View className="bg-gray-800 p-6 rounded-xl mb-6">
+//         <View className="flex-row justify-between items-center mb-4">
+//           <Text className="text-white text-2xl font-bold">
+//             {customer.first_name} {customer.last_name}
+//           </Text>
+//           {isEditingClient ? (
+//             <View className="flex-row space-x-2">
+//               <TouchableOpacity onPress={handleSaveClient} className="p-2 bg-green-600 rounded-full">
+//                 <Save size={20} color="white" />
+//               </TouchableOpacity>
+//               <TouchableOpacity onPress={handleCancelEdit} className="p-2 bg-red-600 rounded-full">
+//                 <X size={20} color="white" />
+//               </TouchableOpacity>
+//             </View>
+//           ) : (
+//             <TouchableOpacity onPress={handleEditClient} className="p-2 bg-blue-600 rounded-full">
+//               <Edit size={20} color="white" />
+//             </TouchableOpacity>
+//           )}
+//         </View>
+
+//         <View className="space-y-3">
+//           <View className="flex-row">
+//             <Text className="text-gray-400 font-bold w-24">Email:</Text>
+//             {isEditingClient ? (
+//               <TextInput
+//                 className="flex-1 bg-gray-700 text-white p-2 rounded"
+//                 value={clientEditData.email}
+//                 onChangeText={(text) => setClientEditData({ ...clientEditData, email: text })}
+//                 keyboardType="email-address"
+//               />
+//             ) : (
+//               <Text className="text-white flex-1">{customer.email}</Text>
+//             )}
+//           </View>
+//           <View className="flex-row">
+//             <Text className="text-gray-400 font-bold w-24">Phone:</Text>
+//             {isEditingClient ? (
+//               <TextInput
+//                 className="flex-1 bg-gray-700 text-white p-2 rounded"
+//                 value={clientEditData.phone_number}
+//                 onChangeText={(text) => setClientEditData({ ...clientEditData, phone_number: text })}
+//                 keyboardType="phone-pad"
+//               />
+//             ) : (
+//               <Text className="text-white flex-1">{customer.phone_number}</Text>
+//             )}
+//           </View>
+//           <View className="flex-row">
+//             <Text className="text-gray-400 font-bold w-24">Address:</Text>
+//             {isEditingClient ? (
+//               <TextInput
+//                 className="flex-1 bg-gray-700 text-white p-2 rounded"
+//                 value={clientEditData.address}
+//                 onChangeText={(text) => setClientEditData({ ...clientEditData, address: text })}
+//                 multiline
+//               />
+//             ) : (
+//               <Text className="text-white flex-1">{customer.address || 'N/A'}</Text>
+//             )}
+//           </View>
+//           <View className="flex-row">
+//             <Text className="text-gray-400 font-bold w-24">Total Spent:</Text>
+//             <Text className="text-green-400 flex-1">{formatCurrency(customer.total_spent || 0)}</Text>
+//           </View>
+//         </View>
+//       </View>
+
+//       {/* Vehicles Section */}
+//       <View className="bg-gray-800 p-6 rounded-xl mb-6">
+//         <View className="flex-row justify-between items-center mb-4">
+//           <Text className="text-white text-2xl font-bold">Vehicles</Text>
+//           <TouchableOpacity onPress={handleAddVehicle} className="p-2 bg-green-600 rounded-full">
+//             <Plus size={20} color="white" />
+//           </TouchableOpacity>
+//         </View>
+//         {clientVehicles && clientVehicles.length > 0 ? (
+//           clientVehicles.map((vehicle) => (
+//             <View key={vehicle.id} className="bg-gray-700 p-4 rounded-lg mb-4">
+//               <View className="flex-row justify-between items-center mb-2">
+//                 <Text className="text-white text-lg font-bold">
+//                   {vehicle.make}
+//                 </Text>
+//                 {editingVehicleId === vehicle.id ? (
+//                   <View className="flex-row space-x-2">
+//                     <TouchableOpacity onPress={handleSaveVehicle} className="p-1 bg-green-600 rounded-full">
+//                       <Save size={16} color="white" />
+//                     </TouchableOpacity>
+//                     <TouchableOpacity onPress={handleCancelEdit} className="p-1 bg-red-600 rounded-full">
+//                       <X size={16} color="white" />
+//                     </TouchableOpacity>
+//                   </View>
+//                 ) : (
+//                   <TouchableOpacity onPress={() => handleEditVehicle(vehicle)} className="p-1 bg-blue-600 rounded-full">
+//                     <Edit size={16} color="white" />
+//                   </TouchableOpacity>
+//                 )}
+//               </View>
+//               <View className="space-y-1">
+//                 <View className="flex-row">
+//                   <Text className="text-gray-400 font-bold w-28">License Plate:</Text>
+//                   {editingVehicleId === vehicle.id ? (
+//                     <TextInput
+//                       className="flex-1 bg-gray-600 text-white p-1 rounded"
+//                       value={vehicleEditData?.licence_plate}
+//                       onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, licence_plate: text })}
+//                     />
+//                   ) : (
+//                     <Text className="text-white flex-1">{vehicle.licence_plate}</Text>
+//                   )}
+//                 </View>
+//                 <View className="flex-row">
+//                   <Text className="text-gray-400 font-bold w-28">Engine Type:</Text>
+//                   {editingVehicleId === vehicle.id ? (
+//                     <TextInput
+//                       className="flex-1 bg-gray-600 text-white p-1 rounded"
+//                       value={vehicleEditData?.engine_type}
+//                       onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, engine_type: text })}
+//                     />
+//                   ) : (
+//                     <Text className="text-white flex-1">{vehicle.engine_type || 'N/A'}</Text>
+//                   )}
+//                 </View>
+//                 <View className="flex-row">
+//                   <Text className="text-gray-400 font-bold w-28">Color:</Text>
+//                   {editingVehicleId === vehicle.id ? (
+//                     <TextInput
+//                       className="flex-1 bg-gray-600 text-white p-1 rounded"
+//                       value={vehicleEditData?.color}
+//                       onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, color: text })}
+//                     />
+//                   ) : (
+//                     <Text className="text-white flex-1">{vehicle.color || 'N/A'}</Text>
+//                   )}
+//                 </View>
+//                 <View className="flex-row">
+//                   <Text className="text-gray-400 font-bold w-28">Mileage:</Text>
+//                   {editingVehicleId === vehicle.id ? (
+//                     <TextInput
+//                       className="flex-1 bg-gray-600 text-white p-1 rounded"
+//                       value={vehicleEditData?.mileage}
+//                       onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, mileage: text })}
+//                       keyboardType="numeric"
+//                     />
+//                   ) : (
+//                     <Text className="text-white flex-1">{vehicle.mileage || 'N/A'}</Text>
+//                   )}
+//                 </View>
+//                 {vehicle.notes && (
+//                   <View className="flex-row">
+//                     <Text className="text-gray-400 font-bold w-28">Notes:</Text>
+//                     {editingVehicleId === vehicle.id ? (
+//                       <TextInput
+//                         className="flex-1 bg-gray-600 text-white p-1 rounded"
+//                         value={vehicleEditData?.notes}
+//                         onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, notes: text })}
+//                         multiline
+//                       />
+//                     ) : (
+//                       <Text className="text-white flex-1">{vehicle.notes}</Text>
+//                     )}
+//                   </View>
+//                 )}
+//               </View>
+//             </View>
+//           ))
+//         ) : (
+//           <Text className="text-gray-400 text-center">No vehicles found for this client.</Text>
+//         )}
+//       </View>
+
+//       {/* Service Records Section */}
+//       <View className="bg-gray-800 p-6 rounded-xl mb-6">
+//         <View className="flex-row justify-between items-center mb-4">
+//           <Text className="text-white text-2xl font-bold">Service Records</Text>
+//           <TouchableOpacity onPress={handleAddService} className="p-2 bg-green-600 rounded-full">
+//             <Plus size={20} color="white" />
+//           </TouchableOpacity>
+//         </View>
+//         {clientServices && clientServices.length > 0 ? (
+//           clientServices.map((service) => (
+//             <View key={service.id} className="bg-gray-700 p-4 rounded-lg mb-4">
+//               <View className="flex-row justify-between items-center">
+//                 <Text className="text-white text-lg font-bold">{service.service_type}</Text>
+//                 <View className="flex-row items-center">
+//                   <DollarSign size={14} color={service.paid_status ? "#10b981" : "#ef4444"} />
+//                   <Text className={`ml-1 ${service.paid_status ? 'text-green-400' : 'text-red-400'}`}>
+//                     {formatCurrency(service.service_cost || 0)}
+//                   </Text>
+//                   <Text className={`ml-2 text-xs ${service.paid_status ? 'text-green-400' : 'text-red-400'}`}>
+//                     {service.paid_status ? 'Paid' : 'Unpaid'}
+//                   </Text>
+//                 </View>
+//               </View>
+//               <Text className="text-gray-400 text-sm">
+//                 Date: {formatDate(service.created_at)}
+//               </Text>
+//               {service.notes && (
+//                 <Text className="text-gray-400 text-sm mt-1">Notes: {service.notes}</Text>
+//               )}
+//               {/* {service.service_expenses && service.service_expenses !== '0' && (
+//                 <Text className="text-gray-400 text-sm mt-1">
+//                   Expenses: {formatCurrency(parseFloat(service.service_expenses))}
+//                 </Text>
+//               )} */}
+//               {(() => {
+//                 const expenses = Number(service.service_expenses || 0); // Convert safely
+//                 if (expenses > 0) {
+//                   return (
+//                     <Text className="text-gray-400 text-sm mt-1">
+//                       Expenses: {formatCurrency(expenses)}
+//                     </Text>
+//                   );
+//                 }
+//                 return null;
+//               })()}
+//             </View>
+//           ))
+//         ) : (
+//           <Text className="text-gray-400 text-center">No service records found for this client.</Text>
+//         )}
+//       </View>
+//     </ScrollView>
+//   );
+// }
+// import React, { useState } from 'react'
+// import { View, Text, TextInput, Image, ScrollView, TouchableOpacity, Modal, Alert } from 'react-native'
+// import { BlurView } from 'expo-blur'
+// import { Search, Edit, Plus, Trash2, Lock, Package, DollarSign, Hash, Truck, CarIcon, Settings, User, MapPin, Bell } from 'lucide-react'
+// import { images } from '@/constants/images'
+
+// interface InventoryItem {
+//   id: string
+//   name: string
+//   category: string
+//   quantity: number
+//   costPrice: number
+//   sellingPrice: number
+//   supplier: string
+//   image: string
+//   code: string
+// }
+
+// export default function InventoryPage() {
+
+//   const branchName = "Main Branch"
+//   const todayStats = {
+//     revenue: 25000,
+//     jobsCompleted: 12,
+//     pendingJobs: 5,
+//     expenses: 5000,
+//     staffAttendance: 8 // out of 10
+//   }
+
+//   const [searchQuery, setSearchQuery] = useState('')
+//   const [activeModal, setActiveModal] = useState<string | null>(null)
+//   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null)
+//   const [passwordModal, setPasswordModal] = useState(false)
+//   const [password, setPassword] = useState('')
+
+//   // Mock inventory data
+//   const [inventory, setInventory] = useState<InventoryItem[]>([
+//     {
+//       id: '1',
+//       name: 'Brake Pads',
+//       category: 'Brakes',
+//       quantity: 3,
+//       costPrice: 1200,
+//       sellingPrice: 1800,
+//       supplier: 'AutoParts Ltd',
+//       image: 'https://example.com/brakepads.jpg',
+//       code: 'BP001'
+//     },
+//     {
+//       id: '2',
+//       name: 'Engine Oil',
+//       category: 'Lubricants',
+//       quantity: 12,
+//       costPrice: 600,
+//       sellingPrice: 950,
+//       supplier: 'OilCorp',
+//       image: 'https://example.com/oil.jpg',
+//       code: 'EO001'
+//     },
+//     {
+//       id: '3',
+//       name: 'Air Filter',
+//       category: 'Filters',
+//       quantity: 8,
+//       costPrice: 300,
+//       sellingPrice: 500,
+//       supplier: 'FilterMax',
+//       image: 'https://example.com/filter.jpg',
+//       code: 'AF001'
+//     },
+//     {
+//       id: '4',
+//       name: 'Spark Plugs',
+//       category: 'Electrical',
+//       quantity: 2,
+//       costPrice: 150,
+//       sellingPrice: 250,
+//       supplier: 'SparkTech',
+//       image: 'https://example.com/spark.jpg',
+//       code: 'SP001'
+//     },
+//     {
+//       id: '5',
+//       name: 'Tire Pressure Gauge',
+//       category: 'Tools',
+//       quantity: 15,
+//       costPrice: 200,
+//       sellingPrice: 350,
+//       supplier: 'ToolMasters',
+//       image: 'https://example.com/gauge.jpg',
+//       code: 'TPG001'
+//     }
+//   ])
+
+//   // Edit form states
+//   const [editForm, setEditForm] = useState({
+//     quantity: '',
+//     costPrice: '',
+//     sellingPrice: '',
+//     supplier: ''
+//   })
+
+//   // Restock form states
+//   const [restockForm, setRestockForm] = useState({
+//     quantity: ''
+//   })
+
+//   const filteredInventory = inventory.filter(item =>
+//     item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//     item.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//     item.supplier.toLowerCase().includes(searchQuery.toLowerCase()) ||
+//     item.category.toLowerCase().includes(searchQuery.toLowerCase())
+//   )
+
+//   const handleEdit = (item: InventoryItem) => {
+//     setSelectedItem(item)
+//     setEditForm({
+//       quantity: item.quantity.toString(),
+//       costPrice: item.costPrice.toString(),
+//       sellingPrice: item.sellingPrice.toString(),
+//       supplier: item.supplier
+//     })
+//     setActiveModal('edit')
+//   }
+
+//   const handleRestock = (item: InventoryItem) => {
+//     setSelectedItem(item)
+//     setRestockForm({ quantity: '' })
+//     setActiveModal('restock')
+//   }
+
+//   const handleRemove = (item: InventoryItem) => {
+//     setSelectedItem(item)
+//     setPasswordModal(true)
+//   }
+
+//   const saveEdit = () => {
+//     if (!selectedItem) return
+
+//     const updatedInventory = inventory.map(item =>
+//       item.id === selectedItem.id
+//         ? {
+//             ...item,
+//             quantity: parseInt(editForm.quantity) || 0,
+//             costPrice: parseFloat(editForm.costPrice) || 0,
+//             sellingPrice: parseFloat(editForm.sellingPrice) || 0,
+//             supplier: editForm.supplier
+//           }
+//         : item
+//     )
+//     setInventory(updatedInventory)
+//     Alert.alert('Success', 'Item updated successfully!')
+//     setActiveModal(null)
+//     setSelectedItem(null)
+//   }
+
+//   const saveRestock = () => {
+//     if (!selectedItem) return
+
+//     const additionalQty = parseInt(restockForm.quantity) || 0
+//     const updatedInventory = inventory.map(item =>
+//       item.id === selectedItem.id
+//         ? { ...item, quantity: item.quantity + additionalQty }
+//         : item
+//     )
+//     setInventory(updatedInventory)
+//     Alert.alert('Success', `${additionalQty} units added to ${selectedItem.name}`)
+//     setActiveModal(null)
+//     setSelectedItem(null)
+//   }
+
+//   const verifyPasswordAndRemove = () => {
+//     if (password === 'admin123') { // Mock password
+//       if (selectedItem) {
+//         const updatedInventory = inventory.filter(item => item.id !== selectedItem.id)
+//         setInventory(updatedInventory)
+//         Alert.alert('Success', `${selectedItem.name} removed from inventory`)
+//       }
+//       setPasswordModal(false)
+//       setPassword('')
+//       setSelectedItem(null)
+//     } else {
+//       Alert.alert('Error', 'Incorrect password')
+//     }
+//   }
+
+//   return (
+//     <View className="flex-1 bg-[#0A0F1E] pt-14">
+//       {/* Header */}
+//       <View className="flex-row items-center justify-between px-6 mb-4">
+//         <Text className="text-white text-xl font-bold">Inventory Management</Text>
+//         <View className="flex-row items-center space-x-6">
+//                   <TouchableOpacity>
+//                     <Bell size={24} color="red" />
+//                   </TouchableOpacity>
+//                   <TouchableOpacity className="flex-row items-center space-x-1 bg-white/10 rounded px-3 py-1">
+//                     <MapPin size={16} color="green" />
+//                     <Text className="text-white">{branchName}</Text>
+//                   </TouchableOpacity>
+//                   <TouchableOpacity>
+//                     <Settings size={24} color="white" />
+//                   </TouchableOpacity>
+                  
+//                 </View>
+//         <Package size={24} color="white" />
+//       </View>
+
+//       {/* Search Bar */}
+//       <View className="px-6 mb-4">
+//         <View className="flex-row items-center bg-white/10 rounded-xl px-4 py-3">
+//           <Search size={20} color="white" />
+//           <TextInput
+//             value={searchQuery}
+//             onChangeText={setSearchQuery}
+//             placeholder="Search by name, code, supplier, or category..."
+//             placeholderTextColor="#9ca3af"
+//             className="flex-1 text-white ml-3"
+//           />
+//         </View>
+//       </View>
+
+//       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+//         {/* Inventory List */}
+//         {filteredInventory.map((item) => (
+//           <BlurView
+//             key={item.id}
+//             intensity={50}
+//             tint="dark"
+//             className={`rounded-2xl p-4 ${item.quantity < 5 ? 'border-2 border-red-500' : ''}`}
+//           >
+//             <View className="flex-row items-center">
+//               <Image
+//                 source={{ uri: item.image }}
+//                 style={{ width: 60, height: 60, borderRadius: 8 }}
+//                 className="mr-4"
+//               />
+//               <View className="flex-1">
+//                 <View className="flex-row items-center justify-between mb-1">
+//                   <Text className="text-white text-lg font-semibold">{item.name}</Text>
+//                   <Text className="text-gray-400 text-sm">{item.code}</Text>
+//                 </View>
+//                 <Text className="text-gray-300 text-sm mb-1">{item.category}</Text>
+//                 <View className="flex-row items-center justify-between">
+//                   <View className="flex-row items-center">
+//                     <Hash size={14} color="#9ca3af" />
+//                     <Text className={`text-sm font-bold ml-1 ${item.quantity < 5 ? 'text-red-400' : 'text-green-400'}`}>
+//                       {item.quantity} units
+//                     </Text>
+//                   </View>
+//                   <View className="flex-row items-center">
+//                     <Truck size={14} color="#9ca3af" />
+//                     <Text className="text-gray-300 text-sm ml-1">{item.supplier}</Text>
+//                   </View>
+//                 </View>
+//                 <View className="flex-row items-center justify-between mt-2">
+//                   <View className="flex-row items-center">
+//                     <DollarSign size={14} color="#9ca3af" />
+//                     <Text className="text-gray-300 text-sm ml-1">
+//                       Cost: KES {item.costPrice} | Sell: KES {item.sellingPrice}
+//                     </Text>
+//                   </View>
+//                 </View>
+//               </View>
+//             </View>
+
+//             {/* Actions */}
+//             <View className="flex-row justify-end space-x-2 mt-3">
+//               <TouchableOpacity
+//                 onPress={() => handleEdit(item)}
+//                 className="bg-blue-600 rounded-lg px-3 py-2"
+//               >
+//                 <Edit size={16} color="white" />
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={() => handleRestock(item)}
+//                 className="bg-green-600 rounded-lg px-3 py-2"
+//               >
+//                 <Plus size={16} color="white" />
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={() => handleRemove(item)}
+//                 className="bg-red-600 rounded-lg px-3 py-2"
+//               >
+//                 <Trash2 size={16} color="white" />
+//               </TouchableOpacity>
+//             </View>
+//           </BlurView>
+//         ))}
+
+//         {filteredInventory.length === 0 && (
+//           <View className="items-center py-8">
+//             <Package size={48} color="#9ca3af" />
+//             <Text className="text-gray-400 text-lg mt-4">No items found</Text>
+//             <Text className="text-gray-500 text-sm">Try adjusting your search terms</Text>
+//           </View>
+//         )}
+//       </ScrollView>
+
+//       {/* Edit Modal */}
+//       <Modal visible={activeModal === 'edit'} animationType="slide" transparent>
+//         <View className="flex-1 justify-center items-center bg-black/50">
+//           <BlurView intensity={80} tint="dark" className="w-11/12 rounded-2xl p-6">
+//             <Text className="text-white text-xl font-bold mb-4">Edit Item</Text>
+//             <Text className="text-gray-300 mb-2">Item: {selectedItem?.name}</Text>
+
+//             <TextInput
+//               value={editForm.quantity}
+//               onChangeText={(text) => setEditForm({...editForm, quantity: text})}
+//               placeholder="Quantity"
+//               placeholderTextColor="#9ca3af"
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+//             />
+//             <TextInput
+//               value={editForm.costPrice}
+//               onChangeText={(text) => setEditForm({...editForm, costPrice: text})}
+//               placeholder="Cost Price (KES)"
+//               placeholderTextColor="#9ca3af"
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+//             />
+//             <TextInput
+//               value={editForm.sellingPrice}
+//               onChangeText={(text) => setEditForm({...editForm, sellingPrice: text})}
+//               placeholder="Selling Price (KES)"
+//               placeholderTextColor="#9ca3af"
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+//             />
+//             <TextInput
+//               value={editForm.supplier}
+//               onChangeText={(text) => setEditForm({...editForm, supplier: text})}
+//               placeholder="Supplier"
+//               placeholderTextColor="#9ca3af"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+//             />
+
+//             <View className="flex-row space-x-3">
+//               <TouchableOpacity
+//                 onPress={saveEdit}
+//                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+//               >
+//                 <Text className="text-white font-semibold">Save Changes</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={() => setActiveModal(null)}
+//                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+//               >
+//                 <Text className="text-white font-semibold">Cancel</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </BlurView>
+//         </View>
+//       </Modal>
+
+//       {/* Restock Modal */}
+//       <Modal visible={activeModal === 'restock'} animationType="slide" transparent>
+//         <View className="flex-1 justify-center items-center bg-black/50">
+//           <BlurView intensity={80} tint="dark" className="w-11/12 rounded-2xl p-6">
+//             <Text className="text-white text-xl font-bold mb-4">Restock Item</Text>
+//             <Text className="text-gray-300 mb-2">Item: {selectedItem?.name}</Text>
+//             <Text className="text-gray-300 mb-4">Current Quantity: {selectedItem?.quantity}</Text>
+
+//             <TextInput
+//               value={restockForm.quantity}
+//               onChangeText={(text) => setRestockForm({...restockForm, quantity: text})}
+//               placeholder="Additional Quantity"
+//               placeholderTextColor="#9ca3af"
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+//             />
+
+//             <View className="flex-row space-x-3">
+//               <TouchableOpacity
+//                 onPress={saveRestock}
+//                 className="flex-1 bg-green-600 rounded-lg py-3 items-center"
+//               >
+//                 <Text className="text-white font-semibold">Add Stock</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={() => setActiveModal(null)}
+//                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+//               >
+//                 <Text className="text-white font-semibold">Cancel</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </BlurView>
+//         </View>
+//       </Modal>
+
+//       {/* Password Modal for Removal */}
+//       <Modal visible={passwordModal} animationType="fade" transparent>
+//         <View className="flex-1 justify-center items-center bg-black/70">
+//           <BlurView intensity={80} tint="dark" className="w-10/12 rounded-2xl p-6">
+//             <View className="flex-row items-center mb-4">
+//               <Lock size={24} color="#DC2626" />
+//               <Text className="text-white text-lg font-bold ml-2">Admin Authorization Required</Text>
+//             </View>
+//             <Text className="text-gray-300 mb-2">Removing: {selectedItem?.name}</Text>
+//             <Text className="text-gray-300 mb-4">Enter admin password to remove this item:</Text>
+//             <TextInput
+//               value={password}
+//               onChangeText={setPassword}
+//               placeholder="Enter password"
+//               placeholderTextColor="#9ca3af"
+//               secureTextEntry
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+//             />
+//             <View className="flex-row space-x-3">
+//               <TouchableOpacity
+//                 onPress={verifyPasswordAndRemove}
+//                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+//               >
+//                 <Text className="text-white font-semibold">Remove Item</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={() => {
+//                   setPasswordModal(false)
+//                   setPassword('')
+//                   setSelectedItem(null)
+//                 }}
+//                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+//               >
+//                 <Text className="text-white font-semibold">Cancel</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </BlurView>
+//         </View>
+//       </Modal>
+//     </View>
+//   )
+// }
+// app/inventory.tsx
+
+
+// import { Ionicons } from '@expo/vector-icons'
+// import { Tabs, useLocalSearchParams, useRouter } from 'expo-router'
+// import React, { useEffect, useState } from 'react'
+// import {
+//   Dimensions,
+//   FlatList,
+//   Modal,
+//   StyleSheet,
+//   Text,
+//   TouchableOpacity,
+//   View
+// } from 'react-native'
+// import { useAuth } from '../../lib/auth'
+// import { useTheme } from '../../lib/theme'
+
+// // Define types for navigation items
+// interface NavItem {
+//   name: string;
+//   title: string;
+//   iconName: string;
+//   roles: ('super-admin' | 'admin' | 'operator')[];
+// }
+
+// export default function TabsLayout() {
+//   const { theme, isDark, toggleTheme } = useTheme()
+//   const { user } = useAuth()
+//   const [dropdownVisible, setDropdownVisible] = useState(false)
+//   const router = useRouter()
+//   const params = useLocalSearchParams()
+  
+//   // Get screen dimensions
+//   const { width } = Dimensions.get('window')
+//   const isDesktop = width >= 768 // Tablet size and above
+//   const isMobile = width < 768
+
+//   console.log('TabsLayout rendering', { user, params, isDesktop, width })
+
+//   // Handle initial navigation based on user role
+//   useEffect(() => {
+//     if (user && params.initialRoute) {
+//       // Small delay to ensure navigation is ready
+//       setTimeout(() => {
+//         const route = params.initialRoute as string;
+//         if (route === 'superadmin') {
+//           router.replace('/superadmin');
+//         } else if (route === 'admin') {
+//           router.replace('/admin');
+//         } else {
+//           router.replace('/dashboard');
+//         }
+//       }, 100)
+//     }
+//   }, [user, params.initialRoute])
+
+//   // Define all navigation options with role restrictions
+//   const allNavOptions: NavItem[] = [
+//     { name: 'dashboard', title: 'Dashboard', iconName: 'home', roles: ['super-admin', 'admin', 'operator'] },
+//     { name: 'superadmin', title: 'Superadmin', iconName: 'shield', roles: ['super-admin'] },
+//     { name: 'operator', title: 'Operator', iconName: 'construct', roles: ['operator'] },
+//     { name: 'clients', title: 'Clients', iconName: 'people', roles: ['super-admin', 'admin', 'operator'] },
+//     { name: 'employees', title: 'Employees', iconName: 'person', roles: ['super-admin', 'operator'] },
+//     { name: 'inventory', title: 'Inventory', iconName: 'cube', roles: ['super-admin', 'admin', 'operator'] },
+//     { name: 'reports', title: 'Reports', iconName: 'bar-chart', roles: ['super-admin', 'admin'] },
+//     { name: 'sms', title: 'SMS', iconName: 'chatbubble', roles: ['super-admin', 'admin'] },
+//     { name: 'Transactions', title: 'Transactions', iconName: 'cash', roles: ['super-admin', 'admin'] },
+//   ]
+
+//   // Filter options based on user role
+//   const getFilteredNavOptions = (): NavItem[] => {
+//     if (!user) return [];
+    
+//     return allNavOptions.filter(option => 
+//       option.roles.includes(user.role as 'super-admin' | 'admin' | 'operator')
+//     );
+//   }
+
+//   // Get all filtered options (for desktop)
+//   const getAllOptions = (): NavItem[] => {
+//     return getFilteredNavOptions();
+//   }
+
+//   // Get main tabs for mobile (first 3 items)
+//   const getMobileMainTabs = (): NavItem[] => {
+//     const filtered = getFilteredNavOptions();
+//     return filtered.slice(0, 3);
+//   }
+
+//   // Get more options for mobile (remaining items)
+//   const getMobileMoreOptions = (): NavItem[] => {
+//     const filtered = getFilteredNavOptions();
+//     return filtered.slice(3);
+//   }
+
+//   // Floating Dock Component for Desktop
+//   const FloatingDock = ({ state, descriptors, navigation }: any) => {
+//     const activeRoute = state.routes[state.index]
+//     const navOptions = getAllOptions()
+
+//     return (
+//       <View style={[styles.floatingDock, isDark ? styles.floatingDockDark : styles.floatingDockLight]}>
+//         {navOptions.map((option) => {
+//           const route = state.routes.find((r: any) => r.name === option.name);
+//           if (!route) return null;
+          
+//           const { options } = descriptors[route.key]
+//           const isFocused = state.routes[state.index].name === option.name
+
+//           const onPress = () => {
+//             const event = navigation.emit({
+//               type: 'tabPress',
+//               target: route.key,
+//               canPreventDefault: true,
+//             })
+
+//             if (!isFocused && !event.defaultPrevented) {
+//               navigation.navigate(route.name)
+//             }
+//           }
+
+//           return (
+//             <TouchableOpacity
+//               key={option.name}
+//               onPress={onPress}
+//               style={[
+//                 styles.dockItem,
+//                 isFocused && (isDark ? styles.dockItemActiveDark : styles.dockItemActiveLight)
+//               ]}
+//             >
+//               <Ionicons
+//                 name={option.iconName as any}
+//                 color={isFocused ? '#3b82f6' : (isDark ? '#9ca3af' : '#6b7280')}
+//                 size={24}
+//               />
+//               <Text style={[
+//                 styles.dockText,
+//                 { 
+//                   color: isFocused ? '#3b82f6' : (isDark ? '#9ca3af' : '#6b7280')
+//                 }
+//               ]}>
+//                 {option.title}
+//               </Text>
+//             </TouchableOpacity>
+//           )
+//         })}
+        
+//         {/* Theme Toggle in Dock */}
+//         <View style={styles.themeToggleContainer}>
+//           <TouchableOpacity onPress={toggleTheme} style={styles.themeToggle}>
+//             <Ionicons name={isDark ? 'moon' : 'sunny'} color={isDark ? '#ffffff' : '#ffffff'} size={24} />
+//           </TouchableOpacity>
+//           {user && (
+//             <View style={[
+//               styles.roleBadge, 
+//               user.role === 'super-admin' ? styles.superAdminBadge :
+//               user.role === 'admin' ? styles.adminBadge :
+//               styles.operatorBadge
+//             ]}>
+//               <Text style={styles.roleBadgeText}>
+//                 {user.role === 'super-admin' ? 'SUPER' : 
+//                  user.role === 'admin' ? 'ADMIN' : 'OPERATOR'}
+//               </Text>
+//             </View>
+//           )}
+//         </View>
+//       </View>
+//     )
+//   }
+
+//   // Mobile Tab Bar Component
+//   const MobileTabBar = ({ state, descriptors, navigation }: any) => {
+//     const mainTabs = getMobileMainTabs()
+//     const moreOptions = getMobileMoreOptions()
+
+//     const getActiveColor = () => {
+//       return '#3b82f6'
+//     }
+
+//     const getInactiveColor = () => {
+//       return isDark ? '#9ca3af' : '#6b7280'
+//     }
+
+//     return (
+//       <>
+//         <View style={[styles.mobileTabBar, isDark ? styles.mobileTabBarDark : styles.mobileTabBarLight]}>
+//           {/* Main Tabs */}
+//           {mainTabs.map((option) => {
+//             const route = state.routes.find((r: any) => r.name === option.name);
+//             if (!route) return null;
+            
+//             const { options } = descriptors[route.key]
+//             const isFocused = state.routes[state.index].name === option.name
+
+//             const onPress = () => {
+//               const event = navigation.emit({
+//                 type: 'tabPress',
+//                 target: route.key,
+//                 canPreventDefault: true,
+//               })
+
+//               if (!isFocused && !event.defaultPrevented) {
+//                 navigation.navigate(route.name)
+//               }
+//             }
+
+//             return (
+//               <TouchableOpacity
+//                 key={option.name}
+//                 onPress={onPress}
+//                 style={styles.mobileTabItem}
+//               >
+//                 <Ionicons
+//                   name={option.iconName as any}
+//                   color={isFocused ? getActiveColor() : getInactiveColor()}
+//                   size={isFocused ? 28 : 24}
+//                 />
+//                 <Text style={[
+//                   styles.mobileTabText,
+//                   { color: isFocused ? getActiveColor() : getInactiveColor() }
+//                 ]}>
+//                   {option.title}
+//                 </Text>
+//               </TouchableOpacity>
+//             )
+//           })}
+
+//           {/* More Button if there are more options */}
+//           {moreOptions.length > 0 && (
+//             <TouchableOpacity
+//               onPress={() => setDropdownVisible(true)}
+//               style={styles.mobileTabItem}
+//             >
+//               <Ionicons
+//                 name="menu"
+//                 color={getInactiveColor()}
+//                 size={24}
+//               />
+//               <Text style={[styles.mobileTabText, { color: getInactiveColor() }]}>
+//                 More
+//               </Text>
+//             </TouchableOpacity>
+//           )}
+//         </View>
+
+//         {/* Dropdown Modal for More Options */}
+//         <Modal
+//           visible={dropdownVisible}
+//           transparent
+//           animationType="slide"
+//           onRequestClose={() => setDropdownVisible(false)}
+//         >
+//           <TouchableOpacity
+//             style={styles.modalOverlay}
+//             activeOpacity={1}
+//             onPress={() => setDropdownVisible(false)}
+//           >
+//             <View style={[
+//               styles.modalContent, 
+//               isDark ? styles.modalContentDark : styles.modalContentLight
+//             ]}>
+//               <Text style={[
+//                 styles.modalTitle,
+//                 { color: isDark ? '#ffffff' : '#000000' }
+//               ]}>
+//                 More Options
+//               </Text>
+//               <FlatList
+//                 data={moreOptions}
+//                 keyExtractor={(item) => item.name}
+//                 renderItem={({ item }) => {
+//                   const route = state.routes.find((r: any) => r.name === item.name);
+//                   if (!route) return null;
+                  
+//                   const { options } = descriptors[route.key]
+//                   const isFocused = state.routes[state.index].name === item.name
+                  
+//                   return (
+//                     <TouchableOpacity
+//                       onPress={() => {
+//                         navigation.navigate(item.name)
+//                         setDropdownVisible(false)
+//                       }}
+//                       style={styles.modalItem}
+//                     >
+//                       <Ionicons 
+//                         name={item.iconName as any} 
+//                         color={isFocused ? '#3b82f6' : (isDark ? '#9ca3af' : '#6b7280')} 
+//                         size={24} 
+//                       />
+//                       <Text style={[
+//                         styles.modalItemText,
+//                         { 
+//                           color: isFocused ? '#3b82f6' : (isDark ? '#9ca3af' : '#6b7280')
+//                         }
+//                       ]}>
+//                         {item.title}
+//                       </Text>
+//                     </TouchableOpacity>
+//                   )
+//                 }}
+//               />
+//             </View>
+//           </TouchableOpacity>
+//         </Modal>
+//       </>
+//     )
+//   }
+
+//   // Custom Tab Bar that switches between desktop and mobile
+//   const CustomTabBar = (props: any) => {
+//     return isDesktop ? <FloatingDock {...props} /> : <MobileTabBar {...props} />
+//   }
+
+//   // Filter screens based on user role
+//   const filteredScreens = getFilteredNavOptions();
+
+//   return (
+//     <Tabs
+//       screenOptions={{
+//         headerShown: false,
+//       }}
+//       tabBar={CustomTabBar}
+//     >
+//       {filteredScreens.map((screen) => (
+//         <Tabs.Screen
+//           key={screen.name}
+//           name={screen.name}
+//           options={{
+//             title: screen.title,
+//             tabBarIcon: ({ color, size, focused }) => (
+//               <Ionicons name={screen.iconName as any} color={color} size={focused ? size + 2 : size} />
+//             ),
+//           }}
+//         />
+//       ))}
+//     </Tabs>
+//   )
+// }
+
+// const styles = StyleSheet.create({
+//   // Floating Dock Styles
+//   floatingDock: {
+//     position: 'absolute',
+//     bottom: 20,
+//     left: '50%',
+//     transform: [{ translateX: '-50%' }],
+//     borderRadius: 20,
+//     padding: 10,
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     shadowColor: '#000',
+//     shadowOffset: { width: 0, height: 4 },
+//     shadowOpacity: 0.3,
+//     shadowRadius: 4.65,
+//     elevation: 8,
+//     zIndex: 1000,
+//   },
+//   floatingDockLight: {
+//     backgroundColor: 'rgba(15, 23, 42, 0.95)',
+//     borderWidth: 1,
+//     borderColor: 'rgba(255, 255, 255, 0.1)',
+//   },
+//   floatingDockDark: {
+//     backgroundColor: 'rgba(15, 23, 42, 0.95)',
+//     borderWidth: 1,
+//     borderColor: 'rgba(255, 255, 255, 0.1)',
+//   },
+//   dockItem: {
+//     padding: 12,
+//     borderRadius: 10,
+//     marginHorizontal: 5,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//     minWidth: 70,
+//   },
+//   dockItemActiveLight: {
+//     backgroundColor: 'rgba(59, 130, 246, 0.2)',
+//   },
+//   dockItemActiveDark: {
+//     backgroundColor: 'rgba(59, 130, 246, 0.2)',
+//   },
+//   dockText: {
+//     fontSize: 12,
+//     marginTop: 4,
+//     fontWeight: '500',
+//   },
+//   themeToggleContainer: {
+//     marginLeft: 15,
+//     alignItems: 'center',
+//     flexDirection: 'row',
+//   },
+//   themeToggle: {
+//     padding: 10,
+//     borderRadius: 20,
+//   },
+//   roleBadge: {
+//     marginLeft: 8,
+//     borderRadius: 10,
+//     paddingHorizontal: 6,
+//     paddingVertical: 2,
+//   },
+//   superAdminBadge: {
+//     backgroundColor: '#dc2626',
+//   },
+//   adminBadge: {
+//     backgroundColor: '#6b7280',
+//   },
+//   operatorBadge: {
+//     backgroundColor: '#10b981',
+//   },
+//   roleBadgeText: {
+//     color: 'white',
+//     fontSize: 10,
+//     fontWeight: 'bold',
+//   },
+  
+//   // Mobile Tab Bar Styles
+//   mobileTabBar: {
+//     flexDirection: 'row',
+//     height: 70,
+//     paddingBottom: 10,
+//   },
+//   mobileTabBarLight: {
+//     backgroundColor: 'rgba(15, 23, 42, 0.95)',
+//     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+//     borderTopWidth: 1,
+//   },
+//   mobileTabBarDark: {
+//     backgroundColor: 'rgba(15, 23, 42, 0.95)',
+//     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+//     borderTopWidth: 1,
+//   },
+//   mobileTabItem: {
+//     flex: 1,
+//     alignItems: 'center',
+//     justifyContent: 'center',
+//   },
+//   mobileTabText: {
+//     fontSize: 12,
+//     marginTop: 4,
+//     fontWeight: '500',
+//   },
+  
+//   // Modal Styles
+//   modalOverlay: {
+//     flex: 1,
+//     backgroundColor: 'rgba(0, 0, 0, 0.5)',
+//     justifyContent: 'flex-end',
+//   },
+//   modalContent: {
+//     borderTopLeftRadius: 20,
+//     borderTopRightRadius: 20,
+//     padding: 20,
+//     paddingBottom: 40,
+//     maxHeight: '80%',
+//   },
+//   modalContentLight: {
+//     backgroundColor: '#0f172a',
+//   },
+//   modalContentDark: {
+//     backgroundColor: '#0f172a',
+//   },
+//   modalTitle: {
+//     fontSize: 18,
+//     fontWeight: 'bold',
+//     marginBottom: 15,
+//     textAlign: 'center',
+//   },
+//   modalItem: {
+//     flexDirection: 'row',
+//     alignItems: 'center',
+//     padding: 15,
+//     borderBottomWidth: 1,
+//     borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+//   },
+//   modalItemText: {
+//     marginLeft: 15,
+//     fontSize: 16,
+//   },
+// })
+// import React, { useState } from 'react';
+// import { CSVLink } from 'react-csv';
+// import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
+// import useReportsData from '../../lib/pages/useReportsData';
+// import './css/reports.css';
+
+// const reports = [
+//     { key: 'financial', name: 'Financial Report', description: 'Comprehensive report on income and expenses.' },
+//     { key: 'clients', name: 'Client Report', description: 'Details on all registered clients.' },
+//     { key: 'staff', name: 'Staff Report', description: 'Information about all staff members.' },
+//     { key: 'inventory', name: 'Inventory Report', description: 'Current stock levels and inventory details.' },
+//     { key: 'carYard', name: 'Car Yard Report', description: 'Data on all vehicles in the database.' },
+//     { key: 'transactions', name: 'Transactions Report', description: 'Records of all financial transactions.' },
+// ];
+
+// const ReportsPage: React.FC = () => {
+//     const [startDate, setStartDate] = useState<string>('');
+//     const [endDate, setEndDate] = useState<string>('');
+
+//     const { data, loading, error, fetchReports } = useReportsData();
+
+//     const handleFetchReports = (reportKey: string) => {
+//         if (!startDate || !endDate) {
+//             alert('Please select a start and end date.');
+//             return;
+//         }
+        
+//         // Convert string dates to Date objects
+//         const start = new Date(startDate);
+//         const end = new Date(endDate);
+//         fetchReports(reportKey, start, end);
+//     };
+
+//     const getReportFileName = (reportName: string) => {
+//         const start = startDate || 'start';
+//         const end = endDate || 'end';
+//         return `${reportName.replace(/\s+/g, '_')}_${start}_to_${end}.csv`;
+//     };
+
+//     return (
+//         <View className="flex-1 bg-[#0A0F1E] p-4 pt-14">
+//             <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 20 }}>
+//                 <View className="flex-row items-center justify-between mb-6">
+//                     <Text className="text-white text-xl font-bold">Reports Dashboard 📊</Text>
+//                 </View>
+
+//                 <View className="bg-gray-800 rounded-xl p-4 mb-6">
+//                     <Text className="text-white text-lg font-bold mb-4">Select Date Range for Reports</Text>
+//                     <View className="flex-row space-x-4 mb-4">
+//                         <View className="flex-1">
+//                             <Text className="text-gray-400 mb-2">Start Date:</Text>
+//                             <input
+//                                 type="date"
+//                                 value={startDate}
+//                                 onChange={(e) => setStartDate(e.target.value)}
+//                                 className="w-full bg-gray-700 text-white p-3 rounded border border-gray-600"
+//                             />
+//                         </View>
+//                         <View className="flex-1">
+//                             <Text className="text-gray-400 mb-2">End Date:</Text>
+//                             <input
+//                                 type="date"
+//                                 value={endDate}
+//                                 onChange={(e) => setEndDate(e.target.value)}
+//                                 min={startDate}
+//                                 className="w-full bg-gray-700 text-white p-3 rounded border border-gray-600"
+//                             />
+//                         </View>
+//                     </View>
+//                 </View>
+
+//                 {error && (
+//                     <View className="bg-red-600 p-4 rounded-xl mb-6">
+//                         <Text className="text-white">⚠️ {error}</Text>
+//                     </View>
+//                 )}
+
+//                 {loading && (
+//                     <View className="items-center justify-center p-6">
+//                         <Text className="text-white">Loading...</Text>
+//                     </View>
+//                 )}
+
+//                 <View className="grid grid-cols-1 md:grid-cols-2 gap-4">
+//                     {reports.map((report) => (
+//                         <View key={report.key} className="bg-gray-800 rounded-xl p-4">
+//                             <Text className="text-white text-lg font-bold mb-2">{report.name}</Text>
+//                             <Text className="text-gray-400 mb-4">{report.description}</Text>
+                            
+//                             <TouchableOpacity
+//                                 className="bg-blue-600 px-4 py-3 rounded-lg mb-3"
+//                                 onPress={() => handleFetchReports(report.key)}
+//                                 disabled={loading}
+//                             >
+//                                 <Text className="text-white text-center font-semibold">
+//                                     {loading ? 'Fetching...' : 'Get Report Data'}
+//                                 </Text>
+//                             </TouchableOpacity>
+                            
+//                             {data[report.key] && (
+//                                 <CSVLink
+//                                     data={data[report.key] || []}
+//                                     headers={data[report.key].length > 0 ? Object.keys(data[report.key][0]) : []}
+//                                     filename={getReportFileName(report.name)}
+//                                     className="block"
+//                                 >
+//                                     <TouchableOpacity
+//                                         className="bg-green-600 px-4 py-3 rounded-lg"
+//                                         disabled={!data[report.key]?.length}
+//                                     >
+//                                         <Text className="text-white text-center font-semibold">
+//                                             Download as CSV
+//                                         </Text>
+//                                     </TouchableOpacity>
+//                                 </CSVLink>
+//                             )}
+//                         </View>
+//                     ))}
+//                 </View>
+//             </ScrollView>
+//         </View>
+//     );
+// };
+
+// export default ReportsPage;
+// // import React, { useState } from 'react'
+// // import { View, Text, TextInput, TouchableOpacity, Image, ScrollView, Alert, Modal } from 'react-native'
+// // import { useApp } from '@/lib/store'
+// // import { BlurView } from 'expo-blur'
+// // import { DollarSign, Users, Car, CheckCircle, XCircle, Plus, Minus, User, Package, CreditCard, Search, Wrench, Lock, Bell, Settings, MapPin } from 'lucide-react'
+// // import { images } from '@/constants/images'
+
+// // export default function Operator() {
+
+// //   const branchName = "Main Branch"
+// //   const todayStats = {
+// //     revenue: 25000,
+// //     jobsCompleted: 12,
+// //     pendingJobs: 5,
+// //     expenses: 5000,
+// //     staffAttendance: 8 // out of 10
+// //   }
+
+// //   const { cars, clients, employees } = useApp()
+// //   const [activeModal, setActiveModal] = useState<string | null>(null)
+// //   const [searchQuery, setSearchQuery] = useState('')
+// //   const [passwordModal, setPasswordModal] = useState(false)
+// //   const [password, setPassword] = useState('')
+
+// //   // Modal states
+// //   const [customerForm, setCustomerForm] = useState({ name: '', phone: '', carPlate: '', carMake: '', carModel: '', mileage: '' })
+// //   const [jobForm, setJobForm] = useState({ customerId: '', carId: '', issue: '', mechanicId: '' })
+// //   const [inventoryForm, setInventoryForm] = useState({ name: '', quantity: '', price: '', supplier: '' })
+// //   const [paymentForm, setPaymentForm] = useState({ customerId: '', jobId: '', amount: '', method: '' })
+
+// //   const activeJobs = cars.filter(car => car.working)
+// //   const filteredCustomers = clients.filter(c => 
+// //     c.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+// //     c.phone.includes(searchQuery)
+// //   )
+
+// //   const handleAddCustomer = () => {
+// //     if (!customerForm.name || !customerForm.phone) {
+// //       Alert.alert('Error', 'Please fill in all required fields')
+// //       return
+// //     }
+// //     Alert.alert('Success', 'Customer added successfully!')
+// //     setCustomerForm({ name: '', phone: '', carPlate: '', carMake: '', carModel: '', mileage: '' })
+// //     setActiveModal(null)
+// //   }
+
+// //   const handleAddJob = () => {
+// //     if (!jobForm.customerId || !jobForm.carId || !jobForm.issue) {
+// //       Alert.alert('Error', 'Please fill in all required fields')
+// //       return
+// //     }
+// //     Alert.alert('Success', 'Job added successfully!')
+// //     setJobForm({ customerId: '', carId: '', issue: '', mechanicId: '' })
+// //     setActiveModal(null)
+// //   }
+
+// //   const handleAddInventory = () => {
+// //     if (!inventoryForm.name || !inventoryForm.quantity) {
+// //       Alert.alert('Error', 'Please fill in all required fields')
+// //       return
+// //     }
+// //     Alert.alert('Success', 'Inventory item added successfully!')
+// //     setInventoryForm({ name: '', quantity: '', price: '', supplier: '' })
+// //     setActiveModal(null)
+// //   }
+
+// //   const handleRecordPayment = () => {
+// //     if (!paymentForm.customerId || !paymentForm.amount) {
+// //       Alert.alert('Error', 'Please fill in all required fields')
+// //       return
+// //     }
+// //     Alert.alert('Success', 'Payment recorded successfully!')
+// //     setPaymentForm({ customerId: '', jobId: '', amount: '', method: '' })
+// //     setActiveModal(null)
+// //   }
+
+// //   const handleDeleteInventory = () => {
+// //     setPasswordModal(true)
+// //   }
+
+// //   const verifyPassword = () => {
+// //     if (password === 'admin123') { // Mock password
+// //       Alert.alert('Success', 'Inventory item deleted!')
+// //       setPasswordModal(false)
+// //       setPassword('')
+// //     } else {
+// //       Alert.alert('Error', 'Incorrect password')
+// //     }
+// //   }
+
+// //   const updateJobProgress = (jobId: string, status: string) => {
+// //     Alert.alert('Success', `Job status updated to ${status}`)
+// //   }
+
+// //   return (
+// //     <View className="flex-1 bg-[#0A0F1E] pt-14">
+// //       {/* Header / Top Bar */}
+// //       <View className="flex-row items-center justify-between px-6 mb-4">
+// //         <View className="flex-row items-center space-x-4">
+// //           <Image source={images.tristarlogo} style={{ width: 104, height: 44 }} />
+// //           <Text className="text-white text-xl font-bold">Operator Dashboard</Text>
+// //         </View>
+// //        <View className="flex-row items-center space-x-6">
+// //                   <TouchableOpacity>
+// //                     <Bell size={24} color="red" />
+// //                   </TouchableOpacity>
+// //                   <TouchableOpacity className="flex-row items-center space-x-1 bg-white/10 rounded px-3 py-1">
+// //                     <MapPin size={16} color="green" />
+// //                     <Text className="text-white">{branchName}</Text>
+// //                   </TouchableOpacity>
+// //                   <TouchableOpacity>
+// //                     <Settings size={24} color="white" />
+// //                   </TouchableOpacity>
+                  
+// //                 </View>
+// //       </View>
+
+// //       <ScrollView contentContainerStyle={{ padding: 16, gap: 12 }}>
+// //         {/* Quick Action Buttons */}
+// //         <View className="flex-row flex-wrap gap-4">
+// //           <TouchableOpacity 
+// //             onPress={() => setActiveModal('customer')}
+// //             className="bg-red-600 p-4 rounded-xl items-center flex-1 min-w-[45%]"
+// //           >
+// //             <User size={24} color="white" />
+// //             <Text className="text-white text-sm mt-2">Add Customer</Text>
+// //           </TouchableOpacity>
+          
+// //           <TouchableOpacity 
+// //             onPress={() => setActiveModal('job')}
+// //             className="bg-red-600 p-4 rounded-xl items-center flex-1 min-w-[45%]"
+// //           >
+// //             <Wrench size={24} color="white" />
+// //             <Text className="text-white text-sm mt-2">Add Job</Text>
+// //           </TouchableOpacity>
+          
+// //           <TouchableOpacity 
+// //             onPress={() => setActiveModal('inventory')}
+// //             className="bg-red-600 p-4 rounded-xl items-center flex-1 min-w-[45%]"
+// //           >
+// //             <Package size={24} color="white" />
+// //             <Text className="text-white text-sm mt-2">Add Inventory</Text>
+// //           </TouchableOpacity>
+          
+// //           <TouchableOpacity 
+// //             onPress={() => setActiveModal('payment')}
+// //             className="bg-red-600 p-4 rounded-xl items-center flex-1 min-w-[45%]"
+// //           >
+// //             <CreditCard size={24} color="white" />
+// //             <Text className="text-white text-sm mt-2">Record Payment</Text>
+// //           </TouchableOpacity>
+// //         </View>
+
+// //         {/* Current Jobs */}
+// //         <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
+// //           <Text className="text-xl font-bold text-white mb-4">Current Jobs</Text>
+// //           {activeJobs.map(job => (
+// //             <View key={job.id} className="bg-white/10 rounded p-3 mb-2">
+// //               <View className="flex-row justify-between items-center mb-2">
+// //                 <Text className="text-white font-semibold">{job.model}</Text>
+// //                 <Text className="text-green-400 font-bold">Active</Text>
+// //               </View>
+// //               <Text className="text-gray-300 text-sm">Owner: {job.owner}</Text>
+// //               <Text className="text-gray-300 text-sm">Work: {job.work}</Text>
+// //               <View className="flex-row space-x-2 mt-2">
+// //                 <TouchableOpacity 
+// //                   onPress={() => updateJobProgress(job.id, 'diagnosed')}
+// //                   className="bg-blue-600 rounded px-3 py-1"
+// //                 >
+// //                   <Text className="text-white text-sm">Diagnosed</Text>
+// //                 </TouchableOpacity>
+// //                 <TouchableOpacity 
+// //                   onPress={() => updateJobProgress(job.id, 'in-progress')}
+// //                   className="bg-yellow-600 rounded px-3 py-1"
+// //                 >
+// //                   <Text className="text-white text-sm">In Progress</Text>
+// //                 </TouchableOpacity>
+// //                 <TouchableOpacity 
+// //                   onPress={() => updateJobProgress(job.id, 'done')}
+// //                   className="bg-green-600 rounded px-3 py-1"
+// //                 >
+// //                   <Text className="text-white text-sm">Done</Text>
+// //                 </TouchableOpacity>
+// //               </View>
+// //             </View>
+// //           ))}
+// //         </BlurView>
+
+// //         {/* Customer List */}
+// //         <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
+// //           <Text className="text-xl font-bold text-white mb-4">Customer List</Text>
+// //           <View className="flex-row items-center bg-white/10 rounded-lg px-3 py-2 mb-4">
+// //             <Search size={20} color="white" />
+// //             <TextInput
+// //               value={searchQuery}
+// //               onChangeText={setSearchQuery}
+// //               placeholder="Search customers..."
+// //               placeholderTextColor="#9ca3af"
+// //               className="flex-1 text-white ml-2"
+// //             />
+// //           </View>
+// //           {filteredCustomers.map(cust => (
+// //             <TouchableOpacity key={cust.id} className="bg-white/10 rounded p-3 mb-2">
+// //               <View className="flex-row items-center space-x-3">
+// //                 <Image source={{ uri: cust.avatar }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+// //                 <View>
+// //                   <Text className="text-white font-semibold">{cust.name}</Text>
+// //                   <Text className="text-gray-300 text-sm">{cust.phone}</Text>
+// //                   <Text className="text-gray-400 text-xs">Cars: {cust.cars.join(', ')}</Text>
+// //                 </View>
+// //               </View>
+// //             </TouchableOpacity>
+// //           ))}
+// //         </BlurView>
+
+// //         {/* Inventory Snapshot */}
+// //         <BlurView intensity={50} tint="dark" className="rounded-2xl p-6 mb-8">
+// //           <Text className="text-xl font-bold text-white mb-4">Inventory (View Only)</Text>
+// //           <View className="bg-white/10 rounded p-3 mb-2 flex-row justify-between items-center">
+// //             <View>
+// //               <Text className="text-white">Engine Oil</Text>
+// //               <Text className="text-gray-300 text-sm">Current: 15 | Min: 20</Text>
+// //             </View>
+// //             <TouchableOpacity 
+// //               onPress={handleDeleteInventory}
+// //               className="bg-red-600 rounded px-3 py-1"
+// //             >
+// //               <Text className="text-white text-sm">Delete</Text>
+// //             </TouchableOpacity>
+// //           </View>
+// //           <View className="bg-white/10 rounded p-3 mb-2 flex-row justify-between items-center">
+// //             <View>
+// //               <Text className="text-white">Brake Pads</Text>
+// //               <Text className="text-gray-300 text-sm">Current: 25 | Min: 10</Text>
+// //             </View>
+// //             <TouchableOpacity 
+// //               onPress={handleDeleteInventory}
+// //               className="bg-red-600 rounded px-3 py-1"
+// //             >
+// //               <Text className="text-white text-sm">Delete</Text>
+// //             </TouchableOpacity>
+// //           </View>
+// //         </BlurView>
+// //       </ScrollView>
+
+// //       {/* Footer Quick Actions */}
+// //       <View className="h-16 bg-[#0A0F1E] flex-row justify-around items-center border-t border-gray-700">
+// //         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
+// //           <Plus size={20} color="white" />
+// //           <Text className="text-white font-semibold">Add Customer</Text>
+// //         </TouchableOpacity>
+// //         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
+// //           <Wrench size={20} color="white" />
+// //           <Text className="text-white font-semibold">Add Job</Text>
+// //         </TouchableOpacity>
+// //         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
+// //           <Package size={20} color="white" />
+// //           <Text className="text-white font-semibold">Add Item</Text>
+// //         </TouchableOpacity>
+// //         <TouchableOpacity className="flex-row items-center space-x-2 bg-red-600 rounded px-4 py-2">
+// //           <CreditCard size={20} color="white" />
+// //           <Text className="text-white font-semibold">Payments</Text>
+// //         </TouchableOpacity>
+// //       </View>
+
+// //       {/* Add Customer Modal */}
+// //       <Modal visible={activeModal === 'customer'} animationType="slide" transparent>
+// //         <View className="flex-1 justify-center items-center bg-black/50">
+// //           <BlurView intensity={80} tint="dark" className="w-11/12 rounded-2xl p-6">
+// //             <Text className="text-white text-xl font-bold mb-4">Add New Customer</Text>
+// //             <TextInput
+// //               value={customerForm.name}
+// //               onChangeText={(text) => setCustomerForm({...customerForm, name: text})}
+// //               placeholder="Customer Name"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={customerForm.phone}
+// //               onChangeText={(text) => setCustomerForm({...customerForm, phone: text})}
+// //               placeholder="Phone Number"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="phone-pad"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={customerForm.carPlate}
+// //               onChangeText={(text) => setCustomerForm({...customerForm, carPlate: text})}
+// //               placeholder="Car Plate"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={customerForm.carMake}
+// //               onChangeText={(text) => setCustomerForm({...customerForm, carMake: text})}
+// //               placeholder="Car Make"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={customerForm.carModel}
+// //               onChangeText={(text) => setCustomerForm({...customerForm, carModel: text})}
+// //               placeholder="Car Model"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={customerForm.mileage}
+// //               onChangeText={(text) => setCustomerForm({...customerForm, mileage: text})}
+// //               placeholder="Mileage"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="numeric"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+// //             />
+// //             <View className="flex-row space-x-3">
+// //               <TouchableOpacity 
+// //                 onPress={handleAddCustomer}
+// //                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Add Customer</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity 
+// //                 onPress={() => setActiveModal(null)}
+// //                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Cancel</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </BlurView>
+// //         </View>
+// //       </Modal>
+
+// //       {/* Add Job Modal */}
+// //       <Modal visible={activeModal === 'job'} animationType="slide" transparent>
+// //         <View className="flex-1 justify-center items-center bg-black/50">
+// //           <BlurView intensity={80} tint="dark" className="w-11/12 rounded-2xl p-6">
+// //             <Text className="text-white text-xl font-bold mb-4">Add New Job</Text>
+// //             <TextInput
+// //               value={jobForm.customerId}
+// //               onChangeText={(text) => setJobForm({...jobForm, customerId: text})}
+// //               placeholder="Select Customer"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={jobForm.carId}
+// //               onChangeText={(text) => setJobForm({...jobForm, carId: text})}
+// //               placeholder="Select Car"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={jobForm.issue}
+// //               onChangeText={(text) => setJobForm({...jobForm, issue: text})}
+// //               placeholder="Issue Description"
+// //               placeholderTextColor="#9ca3af"
+// //               multiline
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3 h-20"
+// //             />
+// //             <TextInput
+// //               value={jobForm.mechanicId}
+// //               onChangeText={(text) => setJobForm({...jobForm, mechanicId: text})}
+// //               placeholder="Assign Mechanic"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+// //             />
+// //             <View className="flex-row space-x-3">
+// //               <TouchableOpacity 
+// //                 onPress={handleAddJob}
+// //                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Add Job</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity 
+// //                 onPress={() => setActiveModal(null)}
+// //                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Cancel</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </BlurView>
+// //         </View>
+// //       </Modal>
+
+// //       {/* Add Inventory Modal */}
+// //       <Modal visible={activeModal === 'inventory'} animationType="slide" transparent>
+// //         <View className="flex-1 justify-center items-center bg-black/50">
+// //           <BlurView intensity={80} tint="dark" className="w-11/12 rounded-2xl p-6">
+// //             <Text className="text-white text-xl font-bold mb-4">Add Inventory Item</Text>
+// //             <TextInput
+// //               value={inventoryForm.name}
+// //               onChangeText={(text) => setInventoryForm({...inventoryForm, name: text})}
+// //               placeholder="Item Name"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={inventoryForm.quantity}
+// //               onChangeText={(text) => setInventoryForm({...inventoryForm, quantity: text})}
+// //               placeholder="Quantity"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="numeric"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={inventoryForm.price}
+// //               onChangeText={(text) => setInventoryForm({...inventoryForm, price: text})}
+// //               placeholder="Price (KES)"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="numeric"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={inventoryForm.supplier}
+// //               onChangeText={(text) => setInventoryForm({...inventoryForm, supplier: text})}
+// //               placeholder="Supplier"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+// //             />
+// //             <View className="flex-row space-x-3">
+// //               <TouchableOpacity 
+// //                 onPress={handleAddInventory}
+// //                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Add Item</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity 
+// //                 onPress={() => setActiveModal(null)}
+// //                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Cancel</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </BlurView>
+// //         </View>
+// //       </Modal>
+
+// //       {/* Record Payment Modal */}
+// //       <Modal visible={activeModal === 'payment'} animationType="slide" transparent>
+// //         <View className="flex-1 justify-center items-center bg-black/50">
+// //           <BlurView intensity={80} tint="dark" className="w-11/12 rounded-2xl p-6">
+// //             <Text className="text-white text-xl font-bold mb-4">Record Payment</Text>
+// //             <TextInput
+// //               value={paymentForm.customerId}
+// //               onChangeText={(text) => setPaymentForm({...paymentForm, customerId: text})}
+// //               placeholder="Select Customer"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={paymentForm.jobId}
+// //               onChangeText={(text) => setPaymentForm({...paymentForm, jobId: text})}
+// //               placeholder="Select Job"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={paymentForm.amount}
+// //               onChangeText={(text) => setPaymentForm({...paymentForm, amount: text})}
+// //               placeholder="Amount (KES)"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="numeric"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-3"
+// //             />
+// //             <TextInput
+// //               value={paymentForm.method}
+// //               onChangeText={(text) => setPaymentForm({...paymentForm, method: text})}
+// //               placeholder="Payment Method"
+// //               placeholderTextColor="#9ca3af"
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+// //             />
+// //             <View className="flex-row space-x-3">
+// //               <TouchableOpacity 
+// //                 onPress={handleRecordPayment}
+// //                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Record Payment</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity 
+// //                 onPress={() => setActiveModal(null)}
+// //                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Cancel</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </BlurView>
+// //         </View>
+// //       </Modal>
+
+// //       {/* Password Modal for Inventory Deletion */}
+// //       <Modal visible={passwordModal} animationType="fade" transparent>
+// //         <View className="flex-1 justify-center items-center bg-black/70">
+// //           <BlurView intensity={80} tint="dark" className="w-10/12 rounded-2xl p-6">
+// //             <View className="flex-row items-center mb-4">
+// //               <Lock size={24} color="#DC2626" />
+// //               <Text className="text-white text-lg font-bold ml-2">Admin Authorization Required</Text>
+// //             </View>
+// //             <Text className="text-gray-300 mb-4">Enter admin password to delete inventory item:</Text>
+// //             <TextInput
+// //               value={password}
+// //               onChangeText={setPassword}
+// //               placeholder="Enter password"
+// //               placeholderTextColor="#9ca3af"
+// //               secureTextEntry
+// //               className="bg-white/10 text-white rounded-lg px-4 py-3 mb-4"
+// //             />
+// //             <View className="flex-row space-x-3">
+// //               <TouchableOpacity 
+// //                 onPress={verifyPassword}
+// //                 className="flex-1 bg-red-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Verify</Text>
+// //               </TouchableOpacity>
+// //               <TouchableOpacity 
+// //                 onPress={() => {
+// //                   setPasswordModal(false)
+// //                   setPassword('')
+// //                 }}
+// //                 className="flex-1 bg-gray-600 rounded-lg py-3 items-center"
+// //               >
+// //                 <Text className="text-white font-semibold">Cancel</Text>
+// //               </TouchableOpacity>
+// //             </View>
+// //           </BlurView>
+// //         </View>
+// //       </Modal>
+// //     </View>
+// //   )
+// // }
+// // app/(tabs)/operator.tsx
+// import { Text, View } from 'react-native';
+
+// export default function OperatorScreen() {
+//   return (
+//     <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+//       <Text>Operator Screen - Coming Soon</Text>
+//     </View>
+//   );
+// }
+// import { useLocalSearchParams, useRouter } from 'expo-router';
+// import { ArrowLeft, Save } from 'lucide-react';
+// import React, { useEffect, useState } from 'react';
+// import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+// import { fetchInventoryItemByCode, updateInventoryItem } from '../../lib/pages/useInventoryData';
+// import { InventoryItem } from '../../lib/types';
+
+// export default function GarageInventoryEditPage() {
+//   const { item_code } = useLocalSearchParams();
+//   const [item, setItem] = useState<InventoryItem | null>(null);
+//   const [loading, setLoading] = useState<boolean>(true);
+//   const [saving, setSaving] = useState<boolean>(false);
+//   const router = useRouter();
+
+//   useEffect(() => {
+//     if (item_code) {
+//       loadItemData();
+//     }
+//   }, [item_code]);
+
+//   const loadItemData = async (): Promise<void> => {
+//     try {
+//       setLoading(true);
+//       const response = await fetchInventoryItemByCode(item_code as string);
+//       if (response.success && response.data) {
+//         setItem(response.data);
+//       }
+//     } catch (error) {
+//       console.error('Error loading inventory item:', error);
+//       Alert.alert('Error', 'Failed to load inventory item');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleSave = async (): Promise<void> => {
+//     if (!item) return;
+    
+//     try {
+//       setSaving(true);
+//       const response = await updateInventoryItem(item.item_code, item);
+//       if (response.success) {
+//         Alert.alert('Success', 'Inventory item updated successfully');
+//         router.back();
+//       } else {
+//         Alert.alert('Error', response.message || 'Failed to update inventory item');
+//       }
+//     } catch (error) {
+//       console.error('Error updating inventory item:', error);
+//       Alert.alert('Error', 'Failed to update inventory item');
+//     } finally {
+//       setSaving(false);
+//     }
+//   };
+
+//   const handleChange = (field: keyof InventoryItem, value: string | number): void => {
+//     if (item) {
+//       setItem({ ...item, [field]: value });
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <View className="flex-1 bg-[#0A0F1E] justify-center items-center">
+//         <ActivityIndicator size="large" color="#3B82F6" />
+//       </View>
+//     );
+//   }
+
+//   if (!item) {
+//     return (
+//       <View className="flex-1 bg-[#0A0F1E] justify-center items-center">
+//         <Text className="text-white">Inventory item not found</Text>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View className="flex-1 bg-[#0A0F1E] pt-14">
+//       {/* Header */}
+//       <View className="flex-row items-center justify-between px-6 mb-6">
+//         <TouchableOpacity onPress={() => router.back()}>
+//           <ArrowLeft size={24} color="white" />
+//         </TouchableOpacity>
+//         <Text className="text-white text-xl font-bold">Edit Inventory Item</Text>
+//         <TouchableOpacity onPress={handleSave} disabled={saving}>
+//           {saving ? (
+//             <ActivityIndicator size="small" color="#3B82F6" />
+//           ) : (
+//             <Save size={24} color="white" />
+//           )}
+//         </TouchableOpacity>
+//       </View>
+
+//       <ScrollView className="px-6">
+//         <View className="mb-6">
+//           <Text className="text-white text-lg font-semibold mb-4">Item Information</Text>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Item Code</Text>
+//             <Text className="text-white text-lg">{item.item_code}</Text>
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Name</Text>
+//             <TextInput
+//               value={item.item_name || ''}
+//               onChangeText={(text) => handleChange('item_name', text)}
+//               className="bg-white/10 text-white rounded-lg px-4 py-3"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Category</Text>
+//             <TextInput
+//               value={item.category || ''}
+//               onChangeText={(text) => handleChange('category', text)}
+//               className="bg-white/10 text-white rounded-lg px-4 py-3"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Description</Text>
+//             <TextInput
+//               value={item.description || ''}
+//               onChangeText={(text) => handleChange('description', text)}
+//               multiline
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 h-20"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Quantity In</Text>
+//             <TextInput
+//               value={item.quantity_in ? item.quantity_in.toString() : ''}
+//               onChangeText={(text) => handleChange('quantity_in', parseInt(text) || 0)}
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Purchase Price</Text>
+//             <TextInput
+//               value={item.purchase_price ? item.purchase_price.toString() : ''}
+//               onChangeText={(text) => handleChange('purchase_price', parseFloat(text) || 0)}
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Selling Price</Text>
+//             <TextInput
+//               value={item.selling_price ? item.selling_price.toString() : ''}
+//               onChangeText={(text) => handleChange('selling_price', parseFloat(text) || 0)}
+//               keyboardType="numeric"
+//               className="bg-white/10 text-white rounded-lg px-4 py-3"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Supplier</Text>
+//             <TextInput
+//               value={item.supplier_name || ''}
+//               onChangeText={(text) => handleChange('supplier_name', text)}
+//               className="bg-white/10 text-white rounded-lg px-4 py-3"
+//             />
+//           </View>
+          
+//           <View className="mb-4">
+//             <Text className="text-gray-400 mb-2">Mechanic Notes</Text>
+//             <TextInput
+//               value={item.mechanic_notes || ''}
+//               onChangeText={(text) => handleChange('mechanic_notes', text)}
+//               multiline
+//               className="bg-white/10 text-white rounded-lg px-4 py-3 h-20"
+//             />
+//           </View>
+//         </View>
+//       </ScrollView>
+//     </View>
+//   );
+// }
+// garage.tsx
+// // import { useLocalSearchParams, useRouter } from 'expo-router';
+// // import { Save, X } from 'lucide-react-native';
+// // import React, { useState } from 'react';
+// // import {
+// //   ActivityIndicator,
+// //   Alert,
+// //   ScrollView,
+// //   Switch,
+// //   Text,
+// //   TextInput,
+// //   TouchableOpacity,
+// //   View,
+// // } from 'react-native';
+// // import { useClientData } from '../../lib/pages/clientData';
+
+// // export default function AddService() {
+// //   const { clientId } = useLocalSearchParams();
+// //   const router = useRouter();
+// //   const { addClientService, loading, error } = useClientData();
+// //   const [formData, setFormData] = useState({
+// //     service_type: '',
+// //     service_cost: '',
+// //     service_expenses: '',
+// //     paid_status: false,
+// //     notes: '',
+// //   });
+
+// //   const handleInputChange = (field: string, value: string) => {
+// //     setFormData({ ...formData, [field]: value });
+// //   };
+
+// //   const handleGoBack = () => {
+// //     router.back();
+// //   };
+
+// //   const handleSave = async () => {
+// //     if (!formData.service_type) {
+// //       Alert.alert('Error', 'Service Type is required.');
+// //       return;
+// //     }
+    
+// //     try {
+// //       await addClientService(clientId as string, {
+// //         ...formData,
+// //         service_cost: formData.service_cost ? parseFloat(formData.service_cost) : 0,
+// //         service_expenses: formData.service_expenses ? parseFloat(formData.service_expenses) : 0,
+// //       });
+// //       Alert.alert('Success', 'Service added successfully!');
+// //       router.back(); // Go back to client details
+// //       // Optionally refresh the client data on the previous screen
+// //     } catch (err) {
+// //       Alert.alert('Error', 'Failed to add service.');
+// //     }
+// //   };
+
+// //   return (
+// //     <View className="flex-1 bg-[#0A0F1E] p-4 pt-14">
+// //       {loading && (
+// //         <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+// //           <ActivityIndicator size="large" color="#3b82f6" />
+// //           <Text className="text-white mt-2">Adding service...</Text>
+// //         </View>
+// //       )}
+
+// //       <ScrollView className="flex-1">
+// //         <View className="flex-row items-center justify-between mb-6">
+// //           <TouchableOpacity onPress={handleGoBack} className="p-2 rounded-full">
+// //             <Text className="text-blue-500 text-base">← Back</Text>
+// //           </TouchableOpacity>
+// //           <Text className="text-white text-xl font-bold">Add New Service</Text>
+// //           <View className="w-10" />
+// //         </View>
+
+// //         <View className="bg-gray-800 rounded-xl p-4 mb-6 space-y-4">
+// //           <View className="flex-row items-center">
+// //             <Text className="text-gray-400 font-bold w-24">Service Type:</Text>
+// //             <TextInput
+// //               className="flex-1 bg-gray-700 text-white p-3 rounded"
+// //               placeholder="e.g., Oil Change"
+// //               placeholderTextColor="#9ca3af"
+// //               value={formData.service_type}
+// //               onChangeText={(text) => handleInputChange('service_type', text)}
+// //             />
+// //           </View>
+
+// //           <View className="flex-row items-center">
+// //             <Text className="text-gray-400 font-bold w-24">Service Cost:</Text>
+// //             <TextInput
+// //               className="flex-1 bg-gray-700 text-white p-3 rounded"
+// //               placeholder="e.g., 50.00"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="numeric"
+// //               value={formData.service_cost}
+// //               onChangeText={(text) => handleInputChange('service_cost', text)}
+// //             />
+// //           </View>
+
+// //           <View className="flex-row items-center">
+// //             <Text className="text-gray-400 font-bold w-24">Expenses:</Text>
+// //             <TextInput
+// //               className="flex-1 bg-gray-700 text-white p-3 rounded"
+// //               placeholder="e.g., 20.00"
+// //               placeholderTextColor="#9ca3af"
+// //               keyboardType="numeric"
+// //               value={formData.service_expenses}
+// //               onChangeText={(text) => handleInputChange('service_expenses', text)}
+// //             />
+// //           </View>
+
+// //           <View className="flex-row items-center justify-between">
+// //             <Text className="text-gray-400 font-bold">Paid Status:</Text>
+// //             <Switch
+// //               trackColor={{ false: '#767577', true: '#81b0ff' }}
+// //               thumbColor={formData.paid_status ? '#f5dd4b' : '#f4f3f4'}
+// //               ios_backgroundColor="#3e3e3e"
+// //               onValueChange={(value) => setFormData({ ...formData, paid_status: value })}
+// //               value={formData.paid_status}
+// //             />
+// //           </View>
+          
+// //           <View>
+// //             <Text className="text-gray-400 font-bold mb-2">Notes:</Text>
+// //             <TextInput
+// //               className="bg-gray-700 text-white p-3 rounded h-24"
+// //               placeholder="Add any notes about the service..."
+// //               placeholderTextColor="#9ca3af"
+// //               multiline
+// //               value={formData.notes}
+// //               onChangeText={(text) => handleInputChange('notes', text)}
+// //             />
+// //           </View>
+
+// //           {error && <Text className="text-red-500 text-center">{error}</Text>}
+
+// //           <View className="flex-row justify-end space-x-2 mt-4">
+// //             <TouchableOpacity
+// //               onPress={handleGoBack}
+// //               className="bg-red-600 px-6 py-3 rounded-lg flex-row items-center"
+// //             >
+// //               <X size={20} color="white" />
+// //               <Text className="text-white ml-2">Cancel</Text>
+// //             </TouchableOpacity>
+// //             <TouchableOpacity
+// //               onPress={handleSave}
+// //               className="bg-green-600 px-6 py-3 rounded-lg flex-row items-center"
+// //             >
+// //               <Save size={20} color="white" />
+// //               <Text className="text-white ml-2">Save Service</Text>
+// //             </TouchableOpacity>
+// //           </View>
+// //         </View>
+// //       </ScrollView>
+// //     </View>
+// //   );
+// // }
+
+// import { useLocalSearchParams, useRouter } from 'expo-router';
+// import { Calendar, Clipboard, DollarSign, Save, User, X } from 'lucide-react-native';
+// import React, { useEffect, useState } from 'react';
+// import {
+//   ActivityIndicator,
+//   Alert,
+//   ScrollView,
+//   Switch,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from 'react-native';
+// import { DropdownPicker } from '../../lib/components/DropdownPicker';
+// import { useClientData } from '../../lib/pages/clientData';
+// import { useStaffData } from '../../lib/pages/useStaffModal';
+
+// export default function AddService() {
+//   const { clientId } = useLocalSearchParams();
+//   const router = useRouter();
+//   const { addClientService, loading: serviceLoading, clientDetails } = useClientData();
+//   const { staff, loading: staffLoading, fetchStaff } = useStaffData();
+  
+//   const [formData, setFormData] = useState({
+//     service_type: '',
+//     service_cost: '',
+//     service_expenses: '',
+//     paid_status: false,
+//     notes: '',
+//     staff_id: '',
+//     client_id: clientId as string,
+//   });
+
+//   useEffect(() => {
+//     if (clientId) {
+//       fetchClientDetails(clientId as string);
+//       fetchStaff();
+//     }else{
+//       Alert.alert('Error', 'No client selected. Please go back and try again.');
+//       router.back();
+//     }
+//   }, [clientId]);
+
+//   const handleInputChange = (field: string, value: string) => {
+//     setFormData({ ...formData, [field]: value });
+//   };
+
+//   const handleGoBack = () => {
+//     router.back();
+//   };
+
+//   const handleSave = async () => {
+//     if (!formData.service_type) {
+//       Alert.alert('Error', 'Service Type is required.');
+//       return;
+//     }
+    
+//     try {
+//       await addClientService(clientId as string, {
+//         ...formData,
+//         service_cost: formData.service_cost ? parseFloat(formData.service_cost) : 0,
+//         service_expenses: formData.service_expenses ? parseFloat(formData.service_expenses) : 0,
+//       });
+//       Alert.alert('Success', 'Service added successfully!');
+//       router.back();
+//     } catch (err) {
+//       Alert.alert('Error', 'Failed to add service.');
+//     }
+//   };
+
+//   const staffOptions = staff.map(s => ({
+//     label: `${s.first_name} ${s.last_name}`,
+//     value: s.staff_id,
+//     ...s
+//   }));
+
+//   const serviceCost = parseFloat(formData.service_cost || '0');
+//   const serviceExpenses = parseFloat(formData.service_expenses || '0');
+//   const netProfit = serviceCost - serviceExpenses;
+
+//   return (
+//     <View className="flex-1 bg-[#0A0F1E]">
+//       {serviceLoading && (
+//         <View className="absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-50">
+//           <ActivityIndicator size="large" color="#3b82f6" />
+//           <Text className="text-white mt-2">Adding service...</Text>
+//         </View>
+//       )}
+
+//       {/* Header */}
+//       <View className="bg-[#1A2033] pt-12 pb-4 px-4 shadow-lg">
+//         <View className="flex-row items-center justify-between">
+//           <TouchableOpacity onPress={handleGoBack} className="p-2">
+//             <X size={24} color="white" />
+//           </TouchableOpacity>
+//           <Text className="text-white text-xl font-bold">Add New Service</Text>
+//           <View className="w-8" />
+//         </View>
+//       </View>
+
+//       <ScrollView className="flex-1">
+//         {/* Client Info Card */}
+//         {clientDetails?.customer && (
+//           <View className="p-4">
+//             <View className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-2xl p-4 border border-blue-700/30">
+//               <Text className="text-blue-400 text-sm font-bold mb-2">CLIENT INFORMATION</Text>
+//               <Text className="text-white text-lg font-bold">
+//                 {clientDetails.customer.first_name} {clientDetails.customer.last_name}
+//               </Text>
+//               <Text className="text-gray-300">{clientDetails.customer.email}</Text>
+//               <Text className="text-gray-400 text-sm">{clientDetails.customer.phone_number}</Text>
+//             </View>
+//           </View>
+//         )}
+
+//         <View className="p-4">
+//           <View className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl">
+//             {/* Service Details Section */}
+//             <View className="mb-6">
+//               <View className="flex-row items-center mb-4">
+//                 <Clipboard size={24} color="#4F46E5" />
+//                 <Text className="text-white text-xl font-bold ml-3">Service Details</Text>
+//               </View>
+              
+//               <View className="space-y-4">
+//                 <View>
+//                   <Text className="text-gray-400 font-bold mb-2">Service Type *</Text>
+//                   <TextInput
+//                     className="bg-gray-700 text-white p-4 rounded-xl border border-gray-600"
+//                     placeholder="e.g., Oil Change, Brake Service"
+//                     placeholderTextColor="#9ca3af"
+//                     value={formData.service_type}
+//                     onChangeText={(text) => handleInputChange('service_type', text)}
+//                   />
+//                 </View>
+
+//                 <View className="grid grid-cols-2 gap-4">
+//                   <View>
+//                     <Text className="text-gray-400 font-bold mb-2">Service Cost (KES)</Text>
+//                     <View className="flex-row items-center bg-gray-700 rounded-xl border border-gray-600">
+//                       <DollarSign size={20} color="#9ca3af" className="ml-3" />
+//                       <TextInput
+//                         className="flex-1 text-white p-4"
+//                         placeholder="0.00"
+//                         placeholderTextColor="#9ca3af"
+//                         keyboardType="numeric"
+//                         value={formData.service_cost}
+//                         onChangeText={(text) => handleInputChange('service_cost', text)}
+//                       />
+//                     </View>
+//                   </View>
+
+//                   <View>
+//                     <Text className="text-gray-400 font-bold mb-2">Expenses (KES)</Text>
+//                     <View className="flex-row items-center bg-gray-700 rounded-xl border border-gray-600">
+//                       <DollarSign size={20} color="#9ca3af" className="ml-3" />
+//                       <TextInput
+//                         className="flex-1 text-white p-4"
+//                         placeholder="0.00"
+//                         placeholderTextColor="#9ca3af"
+//                         keyboardType="numeric"
+//                         value={formData.service_expenses}
+//                         onChangeText={(text) => handleInputChange('service_expenses', text)}
+//                       />
+//                     </View>
+//                   </View>
+//                 </View>
+
+//                 {/* Profit Calculator */}
+//                 {(serviceCost > 0 || serviceExpenses > 0) && (
+//                   <View className="bg-gray-700/50 rounded-xl p-4 border border-gray-600">
+//                     <Text className="text-gray-400 font-bold mb-3">PROFIT CALCULATION</Text>
+//                     <View className="space-y-2">
+//                       <View className="flex-row justify-between">
+//                         <Text className="text-gray-300">Revenue:</Text>
+//                         <Text className="text-green-400 font-bold">KES {serviceCost.toLocaleString()}</Text>
+//                       </View>
+//                       <View className="flex-row justify-between">
+//                         <Text className="text-gray-300">Expenses:</Text>
+//                         <Text className="text-red-400 font-bold">KES {serviceExpenses.toLocaleString()}</Text>
+//                       </View>
+//                       <View className="flex-row justify-between border-t border-gray-600 pt-2">
+//                         <Text className="text-gray-300 font-bold">Net Profit:</Text>
+//                         <Text className={`font-bold ${
+//                           netProfit >= 0 ? 'text-green-400' : 'text-red-400'
+//                         }`}>
+//                           KES {netProfit.toLocaleString()}
+//                         </Text>
+//                       </View>
+//                     </View>
+//                   </View>
+//                 )}
+//               </View>
+//             </View>
+
+//             {/* Assignment Section */}
+//             <View className="mb-6">
+//               <View className="flex-row items-center mb-4">
+//                 <User size={24} color="#4F46E5" />
+//                 <Text className="text-white text-xl font-bold ml-3">Assignment</Text>
+//               </View>
+              
+//               <View className="space-y-4">
+//                 <View>
+//                   <Text className="text-gray-400 font-bold mb-2">Assign to Staff</Text>
+//                   <DropdownPicker
+//                     options={staffOptions}
+//                     selectedValue={formData.staff_id}
+//                     onValueChange={(value) => handleInputChange('staff_id', value)}
+//                     placeholder="Select staff member"
+//                     searchable={true}
+//                   />
+//                 </View>
+
+//                 <View className="flex-row items-center justify-between bg-gray-700/50 p-4 rounded-xl">
+//                   <Text className="text-gray-400 font-bold">Payment Status</Text>
+//                   <View className="flex-row items-center">
+//                     <Text className={`mr-3 font-bold ${
+//                       formData.paid_status ? 'text-green-400' : 'text-red-400'
+//                     }`}>
+//                       {formData.paid_status ? 'Paid' : 'Pending'}
+//                     </Text>
+//                     <Switch
+//                       trackColor={{ false: '#767577', true: '#10b981' }}
+//                       thumbColor={formData.paid_status ? '#f5dd4b' : '#f4f3f4'}
+//                       onValueChange={(value) => setFormData({ ...formData, paid_status: value })}
+//                       value={formData.paid_status}
+//                     />
+//                   </View>
+//                 </View>
+//               </View>
+//             </View>
+
+//             {/* Notes Section */}
+//             <View className="mb-6">
+//               <View className="flex-row items-center mb-4">
+//                 <Calendar size={24} color="#4F46E5" />
+//                 <Text className="text-white text-xl font-bold ml-3">Additional Information</Text>
+//               </View>
+              
+//               <View>
+//                 <Text className="text-gray-400 font-bold mb-2">Service Notes</Text>
+//                 <TextInput
+//                   className="bg-gray-700 text-white p-4 rounded-xl border border-gray-600 h-32"
+//                   placeholder="Add any notes about the service..."
+//                   placeholderTextColor="#9ca3af"
+//                   multiline
+//                   textAlignVertical="top"
+//                   value={formData.notes}
+//                   onChangeText={(text) => handleInputChange('notes', text)}
+//                 />
+//               </View>
+//             </View>
+
+//             {/* Action Buttons */}
+//             <View className="flex-row justify-between space-x-4">
+//               <TouchableOpacity
+//                 onPress={handleGoBack}
+//                 className="flex-1 bg-red-600/20 border border-red-600 py-4 rounded-xl flex-row items-center justify-center"
+//               >
+//                 <X size={20} color="#ef4444" />
+//                 <Text className="text-red-400 font-bold ml-2">Cancel</Text>
+//               </TouchableOpacity>
+              
+//               <TouchableOpacity
+//                 onPress={handleSave}
+//                 disabled={!formData.service_type}
+//                 className={`flex-1 py-4 rounded-xl flex-row items-center justify-center ${
+//                   formData.service_type 
+//                     ? 'bg-green-600 border border-green-600' 
+//                     : 'bg-gray-600 border border-gray-600'
+//                 }`}
+//               >
+//                 <Save size={20} color="white" />
+//                 <Text className="text-white font-bold ml-2">Save Service</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+//         </View>
+//       </ScrollView>
+//     </View>
+//   );
+// }
+// // import { BlurView } from 'expo-blur';
+// // import { useRouter } from 'expo-router';
+// // import React, { useState } from 'react';
+// // import { ActivityIndicator, Alert, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+// // import { useAuth } from '../../lib/auth'; // Import your actual auth hook
+// // import { addExpense } from '../../lib/pages/useTransactionsData'; // Corrected import path
+
+// // const AddExpensesPage: React.FC = () => {
+// //   const [amount, setAmount] = useState<string>('');
+// //   const [description, setDescription] = useState<string>('');
+// //   const [loading, setLoading] = useState<boolean>(false);
+// //   const router = useRouter();
+// //   const { user, isAuthenticated } = useAuth(); // Use your actual auth hook
+
+// //   const handleSubmit = async () => {
+// //     if (!isAuthenticated || !user?.email) {
+// //       Alert.alert('Error', 'You must be logged in to add an expense.');
+// //       return;
+// //     }
+
+// //     if (!amount || !description) {
+// //       Alert.alert('Error', 'Please fill in all fields.');
+// //       return;
+// //     }
+
+// //     setLoading(true);
+
+// //     try {
+// //       const newExpense = {
+// //         amount: parseFloat(amount),
+// //         description,
+// //         expense_date: new Date().toISOString(),
+// //         staff_id: user.email // Now we are sure that user.email exists
+// //       };
+
+// //       await addExpense(newExpense, user.token);
+
+// //       Alert.alert('Success', 'Expense added successfully!');
+// //       setAmount('');
+// //       setDescription('');
+// //       // router.back(); // Uncomment if you use Expo router
+// //     } catch (error) {
+// //       console.error('Failed to add expense:', error);
+// //       Alert.alert('Error', 'Failed to add expense. Please try again.');
+// //     } finally {
+// //       setLoading(false);
+// //     }
+// //   };
+
+// //   return (
+// //     <View className="flex-1 bg-[#1A2033] pt-12 p-6">
+// //       <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+// //         <BlurView intensity={30} tint="dark" className="bg-white/10 p-6 rounded-2xl">
+// //           <Text className="text-white text-3xl font-bold text-center mb-6">Add New Expense</Text>
+          
+// //           <View className="mb-4">
+// //             <Text className="text-gray-300 text-lg mb-2">Amount (KES)</Text>
+// //             <TextInput
+// //               className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+// //               keyboardType="numeric"
+// //               value={amount}
+// //               onChangeText={setAmount}
+// //               placeholder="e.g., 5000"
+// //               placeholderTextColor="#9ca3af"
+// //             />
+// //           </View>
+
+// //           <View className="mb-6">
+// //             <Text className="text-gray-300 text-lg mb-2">Description</Text>
+// //             <TextInput
+// //               className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+// //               value={description}
+// //               onChangeText={setDescription}
+// //               placeholder="e.g., New part for engine repair"
+// //               placeholderTextColor="#9ca3af"
+// //             />
+// //           </View>
+
+// //           <TouchableOpacity
+// //             className="bg-[#4ade80] py-4 rounded-lg items-center"
+// //             onPress={handleSubmit}
+// //             disabled={loading}
+// //           >
+// //             {loading ? (
+// //               <ActivityIndicator color="#1A2033" />
+// //             ) : (
+// //               <Text className="text-[#1A2033] font-bold text-xl">Submit Expense</Text>
+// //             )}
+// //           </TouchableOpacity>
+// //         </BlurView>
+// //       </ScrollView>
+// //     </View>
+// //   );
+// // };
+
+// // export default AddExpensesPage;
+// // src/app/AddExpenses.tsx
+// import { BlurView } from 'expo-blur';
+// import { useRouter } from 'expo-router';
+// import React, { useState } from 'react';
+// import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+// import { useAuth } from '../../lib/auth';
+// import { addExpense, Expense, useFinancialData } from '../../lib/pages/useTransactionsData';
+
+// const AddExpensesPage: React.FC = () => {
+//   const [amount, setAmount] = useState<string>('');
+//   const [description, setDescription] = useState<string>('');
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [viewExpenses, setViewExpenses] = useState<boolean>(false);
+//   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+//   const router = useRouter();
+//   const { user, isAuthenticated } = useAuth();
+//   const { data } = useFinancialData();
+
+//   // Get all expenses from the monthly data
+//   const allExpenses: Expense[] = data.flatMap(monthData => 
+//     monthData.items.filter(item => !('status' in item)) as Expense[]
+//   );
+
+//   const handleSubmit = async () => {
+//     if (!isAuthenticated || !user?.email) {
+//       Alert.alert('Error', 'You must be logged in to add an expense.');
+//       return;
+//     }
+
+//     if (!amount || !description) {
+//       Alert.alert('Error', 'Please fill in all fields.');
+//       return;
+//     }
+
+//     setLoading(true);
+
+//     try {
+//       const newExpense = {
+//         amount: parseFloat(amount),
+//         description,
+//         expense_date: new Date().toISOString(),
+//         staff_id: user.email
+//       };
+
+//       await addExpense(newExpense, user.token);
+
+//       Alert.alert('Success', 'Expense added successfully!');
+//       setAmount('');
+//       setDescription('');
+//     } catch (error) {
+//       console.error('Failed to add expense:', error);
+//       Alert.alert('Error', 'Failed to add expense. Please try again.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const viewExpenseDetails = (expense: Expense) => {
+//     setSelectedExpense(expense);
+//   };
+
+//   const closeExpenseDetails = () => {
+//     setSelectedExpense(null);
+//   };
+
+//   return (
+//     <View className="flex-1 bg-[#1A2033] pt-12 p-6">
+//       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+//         {/* Header */}
+//         <View className="flex-row justify-between items-center mb-6">
+//           <Text className="text-white text-3xl font-bold">Expense Management</Text>
+//           <TouchableOpacity
+//             onPress={() => setViewExpenses(!viewExpenses)}
+//             className="bg-[#4ade80] px-4 py-2 rounded-lg"
+//           >
+//             <Text className="text-[#1A2033] font-semibold">
+//               {viewExpenses ? 'Add Expense' : 'View Expenses'}
+//             </Text>
+//           </TouchableOpacity>
+//         </View>
+
+//         {viewExpenses ? (
+//           // View Expenses Section
+//           <View>
+//             <Text className="text-white text-xl font-semibold mb-4">All Expenses</Text>
+//             {allExpenses.length === 0 ? (
+//               <Text className="text-gray-300">No expenses found.</Text>
+//             ) : (
+//               allExpenses.map((expense, index) => (
+//                 <TouchableOpacity
+//                   key={index}
+//                   onPress={() => viewExpenseDetails(expense)}
+//                   className="bg-white/10 p-4 rounded-xl mb-3"
+//                 >
+//                   <View className="flex-row justify-between items-center">
+//                     <View>
+//                       <Text className="text-white font-semibold">{expense.description}</Text>
+//                       <Text className="text-gray-300 text-sm">
+//                         {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : 'No date'}
+//                       </Text>
+//                     </View>
+//                     <View className="items-end">
+//                       <Text className="text-[#f87171] font-bold text-lg">
+//                         KES {(expense.amount || 0).toLocaleString()}
+//                       </Text>
+//                       <Text className="text-gray-400 text-xs">ID: {expense.id?.substring(0, 8)}...</Text>
+//                     </View>
+//                   </View>
+//                 </TouchableOpacity>
+//               ))
+//             )}
+//           </View>
+//         ) : (
+//           // Add Expense Section
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 p-6 rounded-2xl">
+//             <Text className="text-white text-3xl font-bold text-center mb-6">Add New Expense</Text>
+            
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Amount (KES)</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 keyboardType="numeric"
+//                 value={amount}
+//                 onChangeText={setAmount}
+//                 placeholder="e.g., 5000"
+//                 placeholderTextColor="#9ca3af"
+//               />
+//             </View>
+
+//             <View className="mb-6">
+//               <Text className="text-gray-300 text-lg mb-2">Description</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={description}
+//                 onChangeText={setDescription}
+//                 placeholder="e.g., New part for engine repair"
+//                 placeholderTextColor="#9ca3af"
+//                 multiline
+//               />
+//             </View>
+
+//             <TouchableOpacity
+//               className="bg-[#4ade80] py-4 rounded-lg items-center"
+//               onPress={handleSubmit}
+//               disabled={loading}
+//             >
+//               {loading ? (
+//                 <ActivityIndicator color="#1A2033" />
+//               ) : (
+//                 <Text className="text-[#1A2033] font-bold text-xl">Submit Expense</Text>
+//               )}
+//             </TouchableOpacity>
+//           </BlurView>
+//         )}
+//       </ScrollView>
+
+//       {/* Expense Detail Modal */}
+//       <Modal
+//         animationType="slide"
+//         transparent={true}
+//         visible={!!selectedExpense}
+//         onRequestClose={closeExpenseDetails}
+//       >
+//         <View className="flex-1 justify-center items-center bg-black/50">
+//           <View className="bg-[#1A2033] m-5 p-5 rounded-2xl w-11/12">
+//             {selectedExpense && (
+//               <>
+//                 <Text className="text-white text-xl font-bold mb-4">Expense Details</Text>
+                
+//                 <View className="mb-3">
+//                   <Text className="text-gray-400 text-sm">Expense ID</Text>
+//                   <Text className="text-white">{selectedExpense.id || 'N/A'}</Text>
+//                 </View>
+//                 <View className="mb-3">
+//                   <Text className="text-gray-400 text-sm">Amount</Text>
+//                   <Text className="text-white">KES {(selectedExpense.amount || 0).toLocaleString()}</Text>
+//                 </View>
+//                 <View className="mb-3">
+//                   <Text className="text-gray-400 text-sm">Description</Text>
+//                   <Text className="text-white">{selectedExpense.description || 'No description'}</Text>
+//                 </View>
+//                 <View className="mb-3">
+//                   <Text className="text-gray-400 text-sm">Staff ID</Text>
+//                   <Text className="text-white">{selectedExpense.staff_id || 'N/A'}</Text>
+//                 </View>
+//                 <View className="mb-3">
+//                   <Text className="text-gray-400 text-sm">Date</Text>
+//                   <Text className="text-white">
+//                     {selectedExpense.expense_date ? new Date(selectedExpense.expense_date).toLocaleString() : 'No date'}
+//                   </Text>
+//                 </View>
+                
+//                 <TouchableOpacity
+//                   onPress={closeExpenseDetails}
+//                   className="bg-[#4ade80] py-3 rounded-lg mt-4"
+//                 >
+//                   <Text className="text-[#1A2033] font-bold text-center">Close</Text>
+//                 </TouchableOpacity>
+//               </>
+//             )}
+//           </View>
+//         </View>
+//       </Modal>
+//     </View>
+//   );
+// };
+
+// export default AddExpensesPage;
+// src/app/AddExpenses.tsx
+
+// import { BlurView } from 'expo-blur';
+// import { useRouter } from 'expo-router';
+// import React, { useState } from 'react';
+// import { ActivityIndicator, Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+// import { useAuth } from '../../lib/auth';
+// import { addExpense, Expense, useFinancialData } from '../../lib/pages/useTransactionsData';
+
+// const AddExpensesPage: React.FC = () => {
+//   const [formData, setFormData] = useState({
+//     item_name: '',
+//     category: '',
+//     description: '',
+//     supplier_name: '',
+//     quantity: '1',
+//     unit_price: '',
+//     payment_method: 'Cash',
+//     status: 'Paid' as 'Paid' | 'Pending',
+//     notes: '',
+//   });
+//   const [loading, setLoading] = useState<boolean>(false);
+//   const [viewExpenses, setViewExpenses] = useState<boolean>(false);
+//   const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
+//   const router = useRouter();
+//   const { user, isAuthenticated } = useAuth();
+//   const { data } = useFinancialData();
+
+//   // Get all expenses from the monthly data
+//   const allExpenses: Expense[] = data.flatMap(monthData => 
+//     monthData.items.filter(item => !('transaction_id' in item)) as Expense[]
+//   );
+
+//   const handleSubmit = async () => {
+//     if (!isAuthenticated || !user?.email) {
+//       Alert.alert('Error', 'You must be logged in to add an expense.');
+//       return;
+//     }
+
+//     if (!formData.item_name || !formData.unit_price) {
+//       Alert.alert('Error', 'Please fill in required fields (Item Name and Unit Price).');
+//       return;
+//     }
+
+//     setLoading(true);
+
+//     try {
+//       const newExpense = {
+//         ...formData,
+//         quantity: parseFloat(formData.quantity) || 1,
+//         unit_price: parseFloat(formData.unit_price),
+//         expense_date: new Date().toISOString(),
+//         staff_id: user.email
+//       };
+
+//       await addExpense(newExpense, user.token);
+
+//       Alert.alert('Success', 'Expense added successfully!');
+//       // Reset form
+//       setFormData({
+//         item_name: '',
+//         category: '',
+//         description: '',
+//         supplier_name: '',
+//         quantity: '1',
+//         unit_price: '',
+//         payment_method: 'Cash',
+//         status: 'Paid',
+//         notes: '',
+//       });
+//     } catch (error) {
+//       console.error('Failed to add expense:', error);
+//       Alert.alert('Error', 'Failed to add expense. Please try again.');
+//     } finally {
+//       setLoading(false);
+//     }
+//   };
+
+//   const handleInputChange = (field: string, value: string) => {
+//     setFormData(prev => ({ ...prev, [field]: value }));
+//   };
+
+//   const viewExpenseDetails = (expense: Expense) => {
+//     setSelectedExpense(expense);
+//   };
+
+//   const closeExpenseDetails = () => {
+//     setSelectedExpense(null);
+//   };
+
+//   return (
+//     <View className="flex-1 bg-[#1A2033] pt-12 p-6">
+//       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+//         {/* Header */}
+//         <View className="flex-row justify-between items-center mb-6">
+//           <Text className="text-white text-3xl font-bold">Expense Management</Text>
+//           <TouchableOpacity
+//             onPress={() => setViewExpenses(!viewExpenses)}
+//             className="bg-[#4ade80] px-4 py-2 rounded-lg"
+//           >
+//             <Text className="text-[#1A2033] font-semibold">
+//               {viewExpenses ? 'Add Expense' : 'View Expenses'}
+//             </Text>
+//           </TouchableOpacity>
+//         </View>
+
+//         {viewExpenses ? (
+//           // View Expenses Section
+//           <View>
+//             <Text className="text-white text-xl font-semibold mb-4">All Expenses</Text>
+//             {allExpenses.length === 0 ? (
+//               <Text className="text-gray-300">No expenses found.</Text>
+//             ) : (
+//               allExpenses.map((expense, index) => (
+//                 <TouchableOpacity
+//                   key={index}
+//                   onPress={() => viewExpenseDetails(expense)}
+//                   className="bg-white/10 p-4 rounded-xl mb-3"
+//                 >
+//                   <View className="flex-row justify-between items-center">
+//                     <View className="flex-1">
+//                       <Text className="text-white font-semibold">{expense.item_name}</Text>
+//                       <Text className="text-gray-300 text-sm">{expense.category}</Text>
+//                       <Text className="text-gray-400 text-xs">
+//                         {expense.expense_date ? new Date(expense.expense_date).toLocaleDateString() : 'No date'}
+//                       </Text>
+//                     </View>
+//                     <View className="items-end">
+//                       <Text className="text-[#f87171] font-bold text-lg">
+//                         KES {(expense.total_cost || expense.amount || 0).toLocaleString()}
+//                       </Text>
+//                       <Text className="text-gray-400 text-xs">Code: {expense.expense_code?.substring(0, 8)}...</Text>
+//                     </View>
+//                   </View>
+//                 </TouchableOpacity>
+//               ))
+//             )}
+//           </View>
+//         ) : (
+//           // Add Expense Section
+//           <BlurView intensity={30} tint="dark" className="bg-white/10 p-6 rounded-2xl">
+//             <Text className="text-white text-3xl font-bold text-center mb-6">Add New Expense</Text>
+            
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Item Name *</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={formData.item_name}
+//                 onChangeText={(value) => handleInputChange('item_name', value)}
+//                 placeholder="e.g., Engine Oil"
+//                 placeholderTextColor="#9ca3af"
+//               />
+//             </View>
+
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Category</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={formData.category}
+//                 onChangeText={(value) => handleInputChange('category', value)}
+//                 placeholder="e.g., Spare Parts, Tools"
+//                 placeholderTextColor="#9ca3af"
+//               />
+//             </View>
+
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Description</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={formData.description}
+//                 onChangeText={(value) => handleInputChange('description', value)}
+//                 placeholder="Detailed description of the expense"
+//                 placeholderTextColor="#9ca3af"
+//                 multiline
+//               />
+//             </View>
+
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Supplier Name</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={formData.supplier_name}
+//                 onChangeText={(value) => handleInputChange('supplier_name', value)}
+//                 placeholder="Vendor/supplier name"
+//                 placeholderTextColor="#9ca3af"
+//               />
+//             </View>
+
+//             <View className="flex-row mb-4">
+//               <View className="flex-1 mr-2">
+//                 <Text className="text-gray-300 text-lg mb-2">Quantity</Text>
+//                 <TextInput
+//                   className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                   keyboardType="numeric"
+//                   value={formData.quantity}
+//                   onChangeText={(value) => handleInputChange('quantity', value)}
+//                   placeholder="1"
+//                   placeholderTextColor="#9ca3af"
+//                 />
+//               </View>
+//               <View className="flex-1 ml-2">
+//                 <Text className="text-gray-300 text-lg mb-2">Unit Price (KES) *</Text>
+//                 <TextInput
+//                   className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                   keyboardType="numeric"
+//                   value={formData.unit_price}
+//                   onChangeText={(value) => handleInputChange('unit_price', value)}
+//                   placeholder="e.g., 5000"
+//                   placeholderTextColor="#9ca3af"
+//                 />
+//               </View>
+//             </View>
+
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Payment Method</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={formData.payment_method}
+//                 onChangeText={(value) => handleInputChange('payment_method', value)}
+//                 placeholder="Cash, Bank Transfer, etc."
+//                 placeholderTextColor="#9ca3af"
+//               />
+//             </View>
+
+//             <View className="mb-4">
+//               <Text className="text-gray-300 text-lg mb-2">Status</Text>
+//               <View className="flex-row">
+//                 <TouchableOpacity
+//                   className={`flex-1 p-3 rounded-l-lg ${formData.status === 'Paid' ? 'bg-green-600' : 'bg-gray-600'}`}
+//                   onPress={() => handleInputChange('status', 'Paid')}
+//                 >
+//                   <Text className="text-white text-center">Paid</Text>
+//                 </TouchableOpacity>
+//                 <TouchableOpacity
+//                   className={`flex-1 p-3 rounded-r-lg ${formData.status === 'Pending' ? 'bg-yellow-600' : 'bg-gray-600'}`}
+//                   onPress={() => handleInputChange('status', 'Pending')}
+//                 >
+//                   <Text className="text-white text-center">Pending</Text>
+//                 </TouchableOpacity>
+//               </View>
+//             </View>
+
+//             <View className="mb-6">
+//               <Text className="text-gray-300 text-lg mb-2">Notes</Text>
+//               <TextInput
+//                 className="bg-gray-700 text-white rounded-lg p-4 text-lg"
+//                 value={formData.notes}
+//                 onChangeText={(value) => handleInputChange('notes', value)}
+//                 placeholder="Additional notes"
+//                 placeholderTextColor="#9ca3af"
+//                 multiline
+//               />
+//             </View>
+
+//             <TouchableOpacity
+//               className="bg-[#4ade80] py-4 rounded-lg items-center"
+//               onPress={handleSubmit}
+//               disabled={loading}
+//             >
+//               {loading ? (
+//                 <ActivityIndicator color="#1A2033" />
+//               ) : (
+//                 <Text className="text-[#1A2033] font-bold text-xl">Submit Expense</Text>
+//               )}
+//             </TouchableOpacity>
+//           </BlurView>
+//         )}
+//       </ScrollView>
+
+//       {/* Expense Detail Modal */}
+//       <Modal
+//         animationType="slide"
+//         transparent={true}
+//         visible={!!selectedExpense}
+//         onRequestClose={closeExpenseDetails}
+//       >
+//         <View className="flex-1 justify-center items-center bg-black/50">
+//           <View className="bg-[#1A2033] m-5 p-5 rounded-2xl w-11/12 max-h-80">
+//             <ScrollView>
+//               {selectedExpense && (
+//                 <>
+//                   <Text className="text-white text-xl font-bold mb-4">Expense Details</Text>
+                  
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Expense Code</Text>
+//                     <Text className="text-white">{selectedExpense.expense_code || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Item Name</Text>
+//                     <Text className="text-white">{selectedExpense.item_name || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Category</Text>
+//                     <Text className="text-white">{selectedExpense.category || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Description</Text>
+//                     <Text className="text-white">{selectedExpense.description || 'No description'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Supplier</Text>
+//                     <Text className="text-white">{selectedExpense.supplier_name || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Quantity</Text>
+//                     <Text className="text-white">{selectedExpense.quantity || 1}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Unit Price</Text>
+//                     <Text className="text-white">KES {(selectedExpense.unit_price || 0).toLocaleString()}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Total Cost</Text>
+//                     <Text className="text-white">KES {(selectedExpense.total_cost || selectedExpense.amount || 0).toLocaleString()}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Payment Method</Text>
+//                     <Text className="text-white">{selectedExpense.payment_method || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Status</Text>
+//                     <Text className="text-white">{selectedExpense.status || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Notes</Text>
+//                     <Text className="text-white">{selectedExpense.notes || 'No notes'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Staff ID</Text>
+//                     <Text className="text-white">{selectedExpense.staff_id || 'N/A'}</Text>
+//                   </View>
+//                   <View className="mb-3">
+//                     <Text className="text-gray-400 text-sm">Date</Text>
+//                     <Text className="text-white">
+//                       {selectedExpense.expense_date ? new Date(selectedExpense.expense_date).toLocaleString() : 'No date'}
+//                     </Text>
+//                   </View>
+                  
+//                   <TouchableOpacity
+//                     onPress={closeExpenseDetails}
+//                     className="bg-[#4ade80] py-3 rounded-lg mt-4"
+//                   >
+//                     <Text className="text-[#1A2033] font-bold text-center">Close</Text>
+//                   </TouchableOpacity>
+//                 </>
+//               )}
+//             </ScrollView>
+//           </View>
+//         </View>
+//       </Modal>
+//     </View>
+//   );
+// };
+
+// export default AddExpensesPage;
+
+// src/app/AddExpenses.tsx
+
+// import { BlurView } from 'expo-blur';
+// import { router } from 'expo-router';
+// import { Lock, Mail, MapPin, Phone, Plus, Search, User, X } from 'lucide-react';
+// import React, { useState } from 'react';
+// import {
+//   ActivityIndicator,
+//   Dimensions,
+//   FlatList,
+//   Modal,
+//   Pressable,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from 'react-native';
+// import { GradientCard } from '../../lib/components/GradientCard';
+// import { Colors } from '../../lib/constants/colors';
+// import { useStaffData } from '../../lib/pages/useStaffData';
+
+// const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
+// // Responsive sizing functions
+// const responsiveWidth = (percentage: number) => (percentage / 100) * screenWidth;
+// const responsiveHeight = (percentage: number) => (percentage / 100) * screenHeight;
+// const responsiveFontSize = (baseSize: number) => {
+//   if (screenWidth < 375) return baseSize - 2; // Small phones
+//   if (screenWidth >= 375 && screenWidth < 414) return baseSize; // Medium phones
+//   if (screenWidth >= 414 && screenWidth < 768) return baseSize + 1; // Large phones
+//   if (screenWidth >= 768 && screenWidth < 1024) return baseSize + 2; // Tablets
+//   return baseSize + 4; // Large tablets
+// };
+
+// export default function EmployeesPage() {
+//   const { staff, loading, error } = useStaffData();
+//   const [searchQuery, setSearchQuery] = useState('');
+//   const [showAddModal, setShowAddModal] = useState(false);
+//   const [newEmployee, setNewEmployee] = useState({
+//     first_name: '',
+//     last_name: '',
+//     email: '',
+//     phone: '',
+//     password: '',
+//     location: ''
+//   });
+
+//   const filteredStaff = staff?.filter(employee =>
+//     `${employee.first_name} ${employee.last_name} ${employee.email} ${employee.phone}`
+//       .toLowerCase()
+//       .includes(searchQuery.toLowerCase())
+//   ) || [];
+
+//   const handleAddEmployee = async () => {
+//     try {
+//       console.log("Adding new employee:", newEmployee);
+//       // API call implementation here
+//       setNewEmployee({ first_name: '', last_name: '', email: '', phone: '', password: '', location: '' });
+//       setShowAddModal(false);
+//     } catch (err) {
+//       console.error("Error adding employee:", err);
+//     }
+//   };
+
+//   // Responsive styles
+//   const styles = {
+//     container: {
+//       paddingHorizontal: screenWidth < 768 ? responsiveWidth(4) : responsiveWidth(6),
+//       paddingTop: screenHeight < 700 ? responsiveHeight(2) : responsiveHeight(4),
+//     },
+//     header: {
+//       marginBottom: screenHeight < 700 ? responsiveHeight(2) : responsiveHeight(4),
+//     },
+//     title: {
+//       fontSize: responsiveFontSize(28),
+//     },
+//     addButton: {
+//       paddingHorizontal: screenWidth < 375 ? 12 : 16,
+//       paddingVertical: screenHeight < 700 ? 10 : 12,
+//     },
+//     searchContainer: {
+//       marginBottom: screenHeight < 700 ? responsiveHeight(2) : responsiveHeight(4),
+//     },
+//     searchInput: {
+//       padding: screenWidth < 375 ? 12 : 16,
+//       paddingLeft: screenWidth < 375 ? 44 : 48,
+//       fontSize: responsiveFontSize(14),
+//     },
+//     searchIcon: {
+//       left: screenWidth < 375 ? 12 : 16,
+//       top: screenWidth < 375 ? 12 : 16,
+//     },
+//     employeeCard: {
+//       marginBottom: screenHeight < 700 ? 12 : 16,
+//     },
+//     avatar: {
+//       width: screenWidth < 375 ? 48 : 56,
+//       height: screenWidth < 375 ? 48 : 56,
+//       marginRight: screenWidth < 375 ? 12 : 16,
+//     },
+//     arrowButton: {
+//       width: screenWidth < 375 ? 32 : 40,
+//       height: screenWidth < 375 ? 32 : 40,
+//     },
+//     modalContent: {
+//       width: screenWidth < 768 ? screenWidth * 0.9 : Math.min(screenWidth * 0.8, 500),
+//       padding: screenWidth < 375 ? 16 : 24,
+//     },
+//     inputGroup: {
+//       marginBottom: screenHeight < 700 ? 12 : 16,
+//     },
+//     label: {
+//       fontSize: responsiveFontSize(12),
+//       marginBottom: 6,
+//     },
+//     textInput: {
+//       padding: screenWidth < 375 ? 10 : 12,
+//       paddingLeft: screenWidth < 375 ? 36 : 40,
+//       fontSize: responsiveFontSize(14),
+//     },
+//     inputIcon: {
+//       left: screenWidth < 375 ? 10 : 12,
+//       top: screenWidth < 375 ? 10 : 12,
+//     },
+//     buttonGroup: {
+//       marginTop: screenHeight < 700 ? 16 : 24,
+//     },
+//     button: {
+//       paddingVertical: screenHeight < 700 ? 10 : 12,
+//     },
+//   };
+
+//   if (loading) {
+//     return (
+//       <View className="flex-1 bg-[#0A0F1E] justify-center items-center">
+//         <ActivityIndicator size="large" color={Colors.primary} />
+//         <Text className="text-white mt-4 text-lg" style={{ fontSize: responsiveFontSize(16) }}>
+//           Loading employees...
+//         </Text>
+//       </View>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <View className="flex-1 bg-[#0A0F1E] justify-center items-center p-6">
+//         <Text className="text-red-400 text-lg text-center mb-4" style={{ fontSize: responsiveFontSize(16) }}>
+//           Error: {error}
+//         </Text>
+//         <TouchableOpacity className="bg-blue-600 px-6 py-3 rounded-xl">
+//           <Text className="text-white font-semibold" style={{ fontSize: responsiveFontSize(14) }}>
+//             Try Again
+//           </Text>
+//         </TouchableOpacity>
+//       </View>
+//     );
+//   }
+
+//   return (
+//     <View className="flex-1 bg-[#0A0F1E]" style={styles.container}>
+//       {/* Header */}
+//       <View className="flex-row justify-between items-center" style={styles.header}>
+//         <Text className="text-white font-bold" style={styles.title}>
+//           Team Members
+//         </Text>
+//         <TouchableOpacity
+//           onPress={() => setShowAddModal(true)}
+//           className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex-row items-center space-x-2"
+//           style={styles.addButton}
+//         >
+//           <Plus size={responsiveFontSize(16)} color="white" />
+//           <Text className="text-white font-semibold" style={{ fontSize: responsiveFontSize(14) }}>
+//             Add Staff
+//           </Text>
+//         </TouchableOpacity>
+//       </View>
+
+//       {/* Search */}
+//       <View className="relative" style={styles.searchContainer}>
+//         <TextInput
+//           className="bg-gray-800 text-white rounded-xl border border-gray-700"
+//           placeholder="Search team members..."
+//           placeholderTextColor="#9ca3af"
+//           value={searchQuery}
+//           onChangeText={setSearchQuery}
+//           style={styles.searchInput}
+//         />
+//         <Search size={responsiveFontSize(16)} color="#9ca3af" style={styles.searchIcon} />
+//       </View>
+
+//       {/* Staff List */}
+//       <FlatList
+//         data={filteredStaff}
+//         keyExtractor={item => item.staff_id}
+//         renderItem={({ item }) => (
+//           <Pressable
+//             onPress={() => router.push({ pathname: "/StaffDetails", params: { id: item.staff_id } })}
+//             style={styles.employeeCard}
+//           >
+//             <GradientCard colors={Colors.gradient.darkToDarker}>
+//               <View className="flex-row items-center">
+//                 <View 
+//                   className="bg-blue-600 rounded-full items-center justify-center"
+//                   style={styles.avatar}
+//                 >
+//                   <User size={responsiveFontSize(18)} color="white" />
+//                 </View>
+//                 <View className="flex-1">
+//                   <Text className="text-white font-semibold" style={{ fontSize: responsiveFontSize(16) }}>
+//                     {item.first_name} {item.last_name}
+//                   </Text>
+//                   <Text className="text-gray-400" style={{ fontSize: responsiveFontSize(12) }}>
+//                     {item.email}
+//                   </Text>
+//                   {item.phone && (
+//                     <Text className="text-gray-400" style={{ fontSize: responsiveFontSize(12) }}>
+//                       {item.phone}
+//                     </Text>
+//                   )}
+//                 </View>
+//                 <View 
+//                   className="bg-blue-600 rounded-full items-center justify-center"
+//                   style={styles.arrowButton}
+//                 >
+//                   <Text className="text-white" style={{ fontSize: responsiveFontSize(12) }}>→</Text>
+//                 </View>
+//               </View>
+//             </GradientCard>
+//           </Pressable>
+//         )}
+//         ListEmptyComponent={
+//           <View className="flex-1 justify-center items-center py-12">
+//             <Text className="text-gray-400" style={{ fontSize: responsiveFontSize(16) }}>
+//               No team members found
+//             </Text>
+//           </View>
+//         }
+//       />
+
+//       {/* Add Employee Modal */}
+//       <Modal
+//         animationType="fade"
+//         transparent={true}
+//         visible={showAddModal}
+//         onRequestClose={() => setShowAddModal(false)}
+//       >
+//         <BlurView intensity={20} className="flex-1 justify-center items-center p-4">
+//           <View 
+//             className="bg-gray-800 rounded-2xl border border-gray-700"
+//             style={styles.modalContent}
+//           >
+//             <View className="flex-row justify-between items-center mb-6">
+//               <Text className="text-white font-bold" style={{ fontSize: responsiveFontSize(20) }}>
+//                 Add Team Member
+//               </Text>
+//               <TouchableOpacity onPress={() => setShowAddModal(false)}>
+//                 <X size={responsiveFontSize(20)} color="#9ca3af" />
+//               </TouchableOpacity>
+//             </View>
+
+//             <View className="space-y-4">
+//               <View className={`flex-row ${screenWidth < 375 ? 'flex-col space-y-4' : 'space-x-3'}`}>
+//                 <View className={screenWidth < 375 ? 'w-full' : 'flex-1'}>
+//                   <Text className="text-gray-400 mb-2" style={styles.label}>
+//                     First Name
+//                   </Text>
+//                   <TextInput
+//                     placeholder="First name"
+//                     placeholderTextColor="#6b7280"
+//                     value={newEmployee.first_name}
+//                     onChangeText={(v) => setNewEmployee({ ...newEmployee, first_name: v })}
+//                     className="bg-gray-700 text-white rounded-lg border border-gray-600"
+//                     style={styles.textInput}
+//                   />
+//                 </View>
+//                 <View className={screenWidth < 375 ? 'w-full' : 'flex-1'}>
+//                   <Text className="text-gray-400 mb-2" style={styles.label}>
+//                     Last Name
+//                   </Text>
+//                   <TextInput
+//                     placeholder="Last name"
+//                     placeholderTextColor="#6b7280"
+//                     value={newEmployee.last_name}
+//                     onChangeText={(v) => setNewEmployee({ ...newEmployee, last_name: v })}
+//                     className="bg-gray-700 text-white rounded-lg border border-gray-600"
+//                     style={styles.textInput}
+//                   />
+//                 </View>
+//               </View>
+
+//               <View style={styles.inputGroup}>
+//                 <Text className="text-gray-400 mb-2" style={styles.label}>
+//                   Email
+//                 </Text>
+//                 <View className="relative">
+//                   <Mail size={responsiveFontSize(14)} color="#6b7280" style={styles.inputIcon} />
+//                   <TextInput
+//                     placeholder="Email address"
+//                     placeholderTextColor="#6b7280"
+//                     value={newEmployee.email}
+//                     onChangeText={(v) => setNewEmployee({ ...newEmployee, email: v })}
+//                     className="bg-gray-700 text-white rounded-lg border border-gray-600"
+//                     style={styles.textInput}
+//                     keyboardType="email-address"
+//                   />
+//                 </View>
+//               </View>
+
+//               <View style={styles.inputGroup}>
+//                 <Text className="text-gray-400 mb-2" style={styles.label}>
+//                   Phone
+//                 </Text>
+//                 <View className="relative">
+//                   <Phone size={responsiveFontSize(14)} color="#6b7280" style={styles.inputIcon} />
+//                   <TextInput
+//                     placeholder="Phone number"
+//                     placeholderTextColor="#6b7280"
+//                     value={newEmployee.phone}
+//                     onChangeText={(v) => setNewEmployee({ ...newEmployee, phone: v })}
+//                     className="bg-gray-700 text-white rounded-lg border border-gray-600"
+//                     style={styles.textInput}
+//                     keyboardType="phone-pad"
+//                   />
+//                 </View>
+//               </View>
+
+//               <View style={styles.inputGroup}>
+//                 <Text className="text-gray-400 mb-2" style={styles.label}>
+//                   Password
+//                 </Text>
+//                 <View className="relative">
+//                   <Lock size={responsiveFontSize(14)} color="#6b7280" style={styles.inputIcon} />
+//                   <TextInput
+//                     placeholder="Password"
+//                     placeholderTextColor="#6b7280"
+//                     value={newEmployee.password}
+//                     onChangeText={(v) => setNewEmployee({ ...newEmployee, password: v })}
+//                     secureTextEntry
+//                     className="bg-gray-700 text-white rounded-lg border border-gray-600"
+//                     style={styles.textInput}
+//                   />
+//                 </View>
+//               </View>
+
+//               <View style={styles.inputGroup}>
+//                 <Text className="text-gray-400 mb-2" style={styles.label}>
+//                   Location
+//                 </Text>
+//                 <View className="relative">
+//                   <MapPin size={responsiveFontSize(14)} color="#6b7280" style={styles.inputIcon} />
+//                   <TextInput
+//                     placeholder="Location"
+//                     placeholderTextColor="#6b7280"
+//                     value={newEmployee.location}
+//                     onChangeText={(v) => setNewEmployee({ ...newEmployee, location: v })}
+//                     className="bg-gray-700 text-white rounded-lg border border-gray-600"
+//                     style={styles.textInput}
+//                   />
+//                 </View>
+//               </View>
+//             </View>
+
+//             <View className={`flex-row ${screenWidth < 375 ? 'flex-col space-y-3' : 'space-x-3'}`} style={styles.buttonGroup}>
+//               <TouchableOpacity
+//                 onPress={() => setShowAddModal(false)}
+//                 className="bg-gray-700 rounded-lg flex-1"
+//                 style={styles.button}
+//               >
+//                 <Text className="text-white text-center font-semibold" style={{ fontSize: responsiveFontSize(14) }}>
+//                   Cancel
+//                 </Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={handleAddEmployee}
+//                 className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex-1"
+//                 style={styles.button}
+//               >
+//                 <Text className="text-white text-center font-semibold" style={{ fontSize: responsiveFontSize(14) }}>
+//                   Add Member
+//                 </Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+//         </BlurView>
+//       </Modal>
+//     </View>
+//   );
+// }

@@ -11,7 +11,7 @@ exports.getSuperAdminData = async (req, res) => {
             totalExpensesRes,
             totalClientsRes
         ] = await Promise.all([
-            // Get total revenue - fixed syntax
+            // Get total revenue
             supabase.from('paybill_payments').select('amount'),
             // Get transaction count
             supabase.from('paybill_payments').select('id', { count: 'exact', head: true }),
@@ -19,7 +19,7 @@ exports.getSuperAdminData = async (req, res) => {
             supabase.from('cars').select('id', { count: 'exact', head: true }),
             // Get low stock count
             supabase.from('garage_inventory').select('id', { count: 'exact', head: true }).lt('current_stock', 10),
-            // Get total expenses - fixed syntax
+            // Get total expenses
             supabase.from('expenses').select('total_cost'),
             // Get total clients
             supabase.from('clients').select('id', { count: 'exact', head: true })
@@ -46,15 +46,26 @@ exports.getSuperAdminData = async (req, res) => {
             .select('*')
             .lt('expiry_date', new Date().toISOString());
 
+        // First, get outstanding balances to get client IDs
+        const { data: outstandingBalancesData, error: outstandingBalancesError } = await supabase
+            .from('cars')
+            .select('client_id')
+            .gt('balance', 0);
+
+        const outstandingClientIds = outstandingBalancesData?.map(car => car.client_id).filter(id => id) || [];
+
         // Fetch Customer Insights
         const [
             topCustomersRes,
             newCustomersRes,
             outstandingBalancesRes
         ] = await Promise.all([
-            supabase.from('clients').select('first_name, last_name, total_spent').order('total_spent', { ascending: false }).limit(3),
-            supabase.from('clients').select('first_name, last_name, created_at').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
-            supabase.from('cars').select('client_id, balance').gt('balance', 0)
+            // Include id field
+            supabase.from('clients').select('id, first_name, last_name, total_spent, phone_number, created_at').order('total_spent', { ascending: false }).limit(5),
+            // Include id field  
+            supabase.from('clients').select('id, first_name, last_name, created_at, phone_number').gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()).limit(5),
+            // Fix outstanding balances - use the client IDs we fetched earlier
+            supabase.from('clients').select('id, first_name, last_name, phone_number, created_at').in('id', outstandingClientIds).limit(5)
         ]);
 
         // Fetch Staff & Payroll
@@ -70,10 +81,33 @@ exports.getSuperAdminData = async (req, res) => {
             .from('user_activity_log')
             .select(`
                 *,
-                profile:profiles(name)
+                profiles:profile_id(first_name, last_name)
             `)
             .order('timestamp', { ascending: false })
             .limit(10);
+
+        if (activities && activities.length > 0) {
+            const profileIds = activities.map(act => act.profile_id).filter(id => id);
+            const { data: profiles, error: profilesError } = await supabase
+                .from('profiles')
+                .select('id, first_name, last_name')
+                .in('id', profileIds);
+
+            // Combine activities with profile names
+            if (profiles) {
+                const profileMap = {};
+                profiles.forEach(profile => {
+                    profileMap[profile.id] = {
+                        first_name: profile.first_name || 'Unknown',
+                        last_name: profile.last_name || 'User'
+                    };
+                });
+
+                activities.forEach(activity => {
+                    activity.profiles = profileMap[activity.profile_id] || { first_name: 'Unknown', last_name: 'User' };
+                });
+            }
+        }
 
         // Fetch Work Orders
         const { data: workOrders, error: workOrdersError } = await supabase
@@ -134,7 +168,6 @@ exports.getSuperAdminData = async (req, res) => {
         res.status(500).json({ error: 'Failed to fetch dashboard data', details: error.message });
     }
 };
-
 // ... rest of your controller methods remain the same
 exports.addActivityLog = async (req, res, next) => {
     const { activity_type, description, route } = req.body;

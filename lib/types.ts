@@ -10,8 +10,13 @@ export interface Car {
   client_email?: string;
   created_at?: string;
   updated_at?: string;
+  status?: 'available' | 'in_service' | 'unavailable';
+  last_service_date?: string;
+  next_service_date?: string;
+  is_paid?: boolean;
+  is_working?: boolean;
+  location?: string;
 }
-
 export interface Client {
   id: string;
   first_name: string;
@@ -43,7 +48,10 @@ export interface InventoryItem {
   created_at?: string;
   updated_at?: string;
   expiry_date?: string;
+  min_stock_level?: number;
+  location?: string;
 }
+
 
 export interface ApiResponse<T> {
   success: boolean;

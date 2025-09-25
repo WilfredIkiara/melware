@@ -1,10 +1,27 @@
 
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { DollarSign, Edit, Plus, Save, X } from 'lucide-react-native';
+import {
+  Calendar,
+  Car,
+  DollarSign,
+  Edit,
+  Eye,
+  Fuel,
+  Gauge,
+  MapPin,
+  Plus,
+  Save,
+  Settings,
+  User,
+  X
+} from 'lucide-react-native';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Dimensions,
+  Modal,
   ScrollView,
   Text,
   TextInput,
@@ -13,23 +30,65 @@ import {
 } from 'react-native';
 import { useClientData } from '../../lib/pages/clientData';
 
+const { width } = Dimensions.get('window');
+const isTablet = width >= 768;
+const isDesktop = width >= 1024;
+
 interface VehicleFormData {
-  id: string; // Add id for editing
+  id: string;
   make: string;
   licence_plate: string;
   engine_type?: string;
   notes?: string;
   mileage?: string;
   color?: string;
+  vehicle_identification_number?: string;
+  fuel_type?: string;
 }
 
-interface ClientDetailsProps {
-  onGoBack: () => void;
-  onAddVehicle: (clientId: string) => void;
-  onAddService: (clientId: string) => void;
+interface Customer {
+  id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone_number?: string;
+  address?: string;
+  total_spent?: number;
+  created_at: string;  // ← Add this
+}
+interface Vehicle {
+  id: string;
+  make: string;
+  licence_plate: string;
+  engine_type?: string;
+  mileage?: number;
+  color?: string;
+  notes?: string;
+  vehicle_identification_number?: string;
+  fuel_type?: string; // ← Add this
+}
+interface Service {
+  id: string;
+  client_id: string;
+  service_type: string;
+  service_cost?: number;
+  paid_status?: boolean;
+  notes?: string;
+  service_expenses?: number;
+  created_at: string;
+  staff?: {
+    first_name: string;
+    last_name: string;
+  };
 }
 
-export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: Omit<ClientDetailsProps, 'clientId'>) {
+interface ServiceModalProps {
+  visible: boolean;
+  service: Service | null;
+  onClose: () => void;
+}
+
+export default function ClientDetails() {
   const { id } = useLocalSearchParams();
   const router = useRouter();
   const actualClientId = id as string;
@@ -54,7 +113,8 @@ export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: 
   });
   const [editingVehicleId, setEditingVehicleId] = useState<string | null>(null);
   const [vehicleEditData, setVehicleEditData] = useState<Partial<VehicleFormData> | null>(null);
-
+  const [selectedService, setSelectedService] = useState<Service | null>(null);
+  const [serviceModalVisible, setServiceModalVisible] = useState(false);
 
   useEffect(() => {
     if (actualClientId) {
@@ -73,8 +133,9 @@ export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: 
       });
     }
   }, [clientDetails]);
+
   const handleGoBack = () => {
-    router.back();
+    router.push("/clients");
   };
 
   const handleAddVehicle = () => {
@@ -100,40 +161,53 @@ export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: 
 
   const handleEditVehicle = (vehicle: any) => {
     setEditingVehicleId(vehicle.id);
-    setVehicleEditData({ ...vehicle, mileage: vehicle.mileage?.toString() });
+    setVehicleEditData({ 
+      ...vehicle, 
+      mileage: vehicle.mileage?.toString(),
+      fuel_type: vehicle.fuel_type || 'Petrol',
+      notes: vehicle.notes || '',
+    });
   };
 
-  const handleSaveVehicle = async () => {
-    if (!vehicleEditData || !editingVehicleId) return;
+const handleSaveVehicle = async () => {
+  if (!vehicleEditData || !editingVehicleId) return;
 
-    try {
-      const formattedData = {
-        ...vehicleEditData,
-        mileage: vehicleEditData.mileage ? parseFloat(vehicleEditData.mileage) : undefined,
-      };
-      await updateClientVehicle(editingVehicleId, formattedData);
-      setEditingVehicleId(null);
-      setVehicleEditData(null);
-      Alert.alert('Success', 'Vehicle details updated successfully!');
-      fetchClientDetails(actualClientId); // Refresh data
-    } catch (e) {
-      Alert.alert('Error', 'Failed to save vehicle details.');
-    }
-  };
+  try {
+    const formattedData = {
+      ...vehicleEditData,
+      mileage: vehicleEditData.mileage ? parseFloat(vehicleEditData.mileage) : undefined,
+    };
+    await updateClientVehicle(editingVehicleId, formattedData);
+    setEditingVehicleId(null);
+    setVehicleEditData(null);
+    Alert.alert('Success', 'Vehicle details updated successfully!');
+    fetchClientDetails(actualClientId);
+  } catch (e) {
+    Alert.alert('Error', 'Failed to save vehicle details.');
+  }
+};
 
   const handleCancelEdit = () => {
     setIsEditingClient(false);
     setEditingVehicleId(null);
+    setVehicleEditData(null);
   };
 
-  const formatDate = (dateString: string) => {
+  const handleViewService = (service: Service) => {
+    setSelectedService(service);
+    setServiceModalVisible(true);
+  };
+
+
+  const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
     });
   };
-
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -141,10 +215,125 @@ export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: 
     }).format(amount);
   };
 
+  const getStatusColor = (status: boolean) => {
+    return status ? '#10b981' : '#ef4444';
+  };
+
+  const getStatusText = (status: boolean) => {
+    return status ? 'Paid' : 'Pending';
+  };
+
+  const ServiceModal = ({ visible, service, onClose }: ServiceModalProps) => {
+    if (!service) return null;
+
+    return (
+      <Modal
+        visible={visible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={onClose}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50">
+          <View className={`bg-gray-800 rounded-2xl mx-4 ${isTablet ? 'w-1/2' : 'w-full'} max-w-md`}>
+            <View className="p-6">
+              <View className="flex-row justify-between items-center mb-4">
+                <Text className="text-white text-2xl font-bold">Service Details</Text>
+                <TouchableOpacity onPress={onClose} className="p-2">
+                  <X size={24} color="white" />
+                </TouchableOpacity>
+              </View>
+
+              <View className="space-y-4">
+                <View className="bg-gray-700 p-4 rounded-xl">
+                  <Text className="text-white text-lg font-bold mb-2">{service.service_type}</Text>
+                  <View className="flex-row justify-between items-center">
+                    <Text className="text-gray-400">Amount:</Text>
+                    <Text className="text-green-400 font-bold">{formatCurrency(service.service_cost || 0)}</Text>
+                  </View>
+                  <View className="flex-row justify-between items-center mt-2">
+                    <Text className="text-gray-400">Status:</Text>
+                    <Text className="text-green-400 font-bold">{getStatusText(service.paid_status || false)}</Text>
+                  </View>
+                </View>
+
+                {service.staff && (
+                  <View className="bg-gray-700 p-4 rounded-xl">
+                    <Text className="text-white font-bold mb-2">Service Provider</Text>
+                    <View className="flex-row items-center">
+                      <User size={16} color="#6b7280" />
+                      <Text className="text-gray-300 ml-2">
+                        {service.staff.first_name} {service.staff.last_name}
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                <View className="bg-gray-700 p-4 rounded-xl">
+                  <Text className="text-white font-bold mb-2">Service Information</Text>
+                  <View className="flex-row items-center mb-2">
+                    <Calendar size={16} color="#6b7280" />
+                    <Text className="text-gray-300 ml-2">{formatDate(service.created_at)}</Text>
+                  </View>
+                  
+                  {/* Service Revenue */}
+                  <View className="flex-row justify-between items-center mb-2">
+                    <Text className="text-gray-400">Revenue:</Text>
+                    <Text className="text-green-400 font-bold">
+                      {formatCurrency(service.service_cost || 0)}
+                    </Text>
+                  </View>
+                  
+                  {/* Service Expenses */}
+                  {service.service_expenses && Number(service.service_expenses) > 0 && (
+                    <View className="flex-row justify-between items-center mb-2">
+                      <Text className="text-gray-400">Expenses:</Text>
+                      <Text className="text-red-400 font-bold">
+                        {formatCurrency(Number(service.service_expenses))}
+                      </Text>
+                    </View>
+                  )}
+                  
+                  {/* Net Profit */}
+                  {service.service_expenses && (
+                    <View className="flex-row justify-between items-center border-t border-gray-600 pt-2">
+                      <Text className="text-gray-300 font-bold">Net Profit:</Text>
+                      <Text className={
+                        (Number(service.service_cost || 0) - Number(service.service_expenses)) >= 0 
+                          ? 'text-green-400 font-bold' 
+                          : 'text-red-400 font-bold'
+                      }>
+                        {formatCurrency(Number(service.service_cost || 0) - Number(service.service_expenses))}
+                      </Text>
+                    </View>
+                  )}
+                </View>
+
+                {service.notes && (
+                  <View className="bg-gray-700 p-4 rounded-xl">
+                    <Text className="text-white font-bold mb-2">Notes</Text>
+                    <Text className="text-gray-300">{service.notes}</Text>
+                  </View>
+                )}
+              </View>
+
+              <TouchableOpacity 
+                onPress={onClose}
+                className="bg-blue-600 py-3 rounded-xl mt-6"
+              >
+                <Text className="text-white text-center font-bold">Close</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
   if (loading) {
     return (
       <View className="flex-1 justify-center items-center bg-[#0A0F1E]">
         <ActivityIndicator size="large" color="#4F46E5" />
+        <Text className="text-white mt-4">Loading client details...</Text>
       </View>
     );
   }
@@ -152,9 +341,14 @@ export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: 
   if (error || !clientDetails?.customer) {
     return (
       <View className="flex-1 justify-center items-center bg-[#0A0F1E] p-4">
-        <Text className="text-red-500 text-lg text-center">{error || 'Client not found.'}</Text>
-        <TouchableOpacity onPress={onGoBack} className="mt-4 bg-gray-700 px-4 py-2 rounded-lg">
-          <Text className="text-white">Go Back</Text>
+        <Text className="text-red-500 text-lg text-center mb-4">
+          {error || 'Client not found.'}
+        </Text>
+        <TouchableOpacity 
+          onPress={handleGoBack} 
+          className="bg-blue-600 px-6 py-3 rounded-xl"
+        >
+          <Text className="text-white font-bold">Go Back</Text>
         </TouchableOpacity>
       </View>
     );
@@ -163,238 +357,332 @@ export default function ClientDetails({ onGoBack, onAddVehicle, onAddService }: 
   const { customer, vehicles, service_records } = clientDetails;
 
   return (
-    <ScrollView className="flex-1 bg-[#0A0F1E] p-4 pt-14">
-      <View className="flex-row justify-between items-center mb-5">
-        <TouchableOpacity onPress={onGoBack} className="p-3 bg-gray-700 rounded-full">
-          <X size={20} color="white" />
-        </TouchableOpacity>
-        <Text className="text-white text-3xl font-bold">Client Details</Text>
-        <View className="w-10" />
-      </View>
-
-      {/* Client Details Section */}
-      <View className="bg-gray-800 p-6 rounded-xl mb-6">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-white text-2xl font-bold">
-            {customer.first_name} {customer.last_name}
-          </Text>
-          {isEditingClient ? (
-            <View className="flex-row space-x-2">
-              <TouchableOpacity onPress={handleSaveClient} className="p-2 bg-green-600 rounded-full">
-                <Save size={20} color="white" />
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleCancelEdit} className="p-2 bg-red-600 rounded-full">
-                <X size={20} color="white" />
-              </TouchableOpacity>
-            </View>
-          ) : (
-            <TouchableOpacity onPress={handleEditClient} className="p-2 bg-blue-600 rounded-full">
-              <Edit size={20} color="white" />
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <View className="space-y-3">
-          <View className="flex-row">
-            <Text className="text-gray-400 font-bold w-24">Email:</Text>
-            {isEditingClient ? (
-              <TextInput
-                className="flex-1 bg-gray-700 text-white p-2 rounded"
-                value={clientEditData.email}
-                onChangeText={(text) => setClientEditData({ ...clientEditData, email: text })}
-                keyboardType="email-address"
-              />
-            ) : (
-              <Text className="text-white flex-1">{customer.email}</Text>
-            )}
-          </View>
-          <View className="flex-row">
-            <Text className="text-gray-400 font-bold w-24">Phone:</Text>
-            {isEditingClient ? (
-              <TextInput
-                className="flex-1 bg-gray-700 text-white p-2 rounded"
-                value={clientEditData.phone_number}
-                onChangeText={(text) => setClientEditData({ ...clientEditData, phone_number: text })}
-                keyboardType="phone-pad"
-              />
-            ) : (
-              <Text className="text-white flex-1">{customer.phone_number}</Text>
-            )}
-          </View>
-          <View className="flex-row">
-            <Text className="text-gray-400 font-bold w-24">Address:</Text>
-            {isEditingClient ? (
-              <TextInput
-                className="flex-1 bg-gray-700 text-white p-2 rounded"
-                value={clientEditData.address}
-                onChangeText={(text) => setClientEditData({ ...clientEditData, address: text })}
-                multiline
-              />
-            ) : (
-              <Text className="text-white flex-1">{customer.address || 'N/A'}</Text>
-            )}
-          </View>
-          <View className="flex-row">
-            <Text className="text-gray-400 font-bold w-24">Total Spent:</Text>
-            <Text className="text-green-400 flex-1">{formatCurrency(customer.total_spent || 0)}</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Vehicles Section */}
-      <View className="bg-gray-800 p-6 rounded-xl mb-6">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-white text-2xl font-bold">Vehicles</Text>
-          <TouchableOpacity onPress={handleAddVehicle} className="p-2 bg-green-600 rounded-full">
-            <Plus size={20} color="white" />
+    <View className="flex-1 bg-[#0A0F1E]">
+      {/* Header */}
+      <View className="bg-[#1A2033] pt-12 pb-4 px-4 shadow-lg">
+        <View className={`flex-row items-center justify-between ${isTablet ? 'max-w-6xl mx-auto' : ''}`}>
+          <TouchableOpacity 
+            onPress={handleGoBack} 
+            className="p-3 bg-gray-700 rounded-xl"
+          >
+            <X size={20} color="white" />
           </TouchableOpacity>
+          <Text className="text-white text-2xl font-bold text-center flex-1 mx-4">
+            Client Details
+          </Text>
+          <View className="w-10" />
         </View>
-        {clientVehicles && clientVehicles.length > 0 ? (
-          clientVehicles.map((vehicle) => (
-            <View key={vehicle.id} className="bg-gray-700 p-4 rounded-lg mb-4">
-              <View className="flex-row justify-between items-center mb-2">
-                <Text className="text-white text-lg font-bold">
-                  {vehicle.make}
+      </View>
+
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
+        <View className={`p-4 ${isTablet ? 'max-w-6xl mx-auto w-full' : ''}`}>
+          
+          {/* Client Details Card */}
+          <View className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 mb-6 shadow-2xl">
+            <View className="flex-row justify-between items-start mb-6">
+              <View className="flex-1">
+                <Text className="text-white text-3xl font-bold mb-2">
+                  {customer.first_name} {customer.last_name}
                 </Text>
-                {editingVehicleId === vehicle.id ? (
-                  <View className="flex-row space-x-2">
-                    <TouchableOpacity onPress={handleSaveVehicle} className="p-1 bg-green-600 rounded-full">
-                      <Save size={16} color="white" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={handleCancelEdit} className="p-1 bg-red-600 rounded-full">
-                      <X size={16} color="white" />
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <TouchableOpacity onPress={() => handleEditVehicle(vehicle)} className="p-1 bg-blue-600 rounded-full">
-                    <Edit size={16} color="white" />
-                  </TouchableOpacity>
-                )}
+                <Text className="text-gray-400 text-sm">
+                  {/* Client since {String(formatDate(customer.created_at))} */}
+                </Text>
               </View>
-              <View className="space-y-1">
-                <View className="flex-row">
-                  <Text className="text-gray-400 font-bold w-28">License Plate:</Text>
-                  {editingVehicleId === vehicle.id ? (
-                    <TextInput
-                      className="flex-1 bg-gray-600 text-white p-1 rounded"
-                      value={vehicleEditData?.licence_plate}
-                      onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, licence_plate: text })}
-                    />
-                  ) : (
-                    <Text className="text-white flex-1">{vehicle.licence_plate}</Text>
-                  )}
+              {isEditingClient ? (
+                <View className="flex-row space-x-2">
+                  <TouchableOpacity 
+                    onPress={handleSaveClient} 
+                    className="p-3 bg-green-600 rounded-xl"
+                  >
+                    <Save size={20} color="white" />
+                  </TouchableOpacity>
+                  <TouchableOpacity 
+                    onPress={handleCancelEdit} 
+                    className="p-3 bg-red-600 rounded-xl"
+                  >
+                    <X size={20} color="white" />
+                  </TouchableOpacity>
                 </View>
-                <View className="flex-row">
-                  <Text className="text-gray-400 font-bold w-28">Engine Type:</Text>
-                  {editingVehicleId === vehicle.id ? (
-                    <TextInput
-                      className="flex-1 bg-gray-600 text-white p-1 rounded"
-                      value={vehicleEditData?.engine_type}
-                      onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, engine_type: text })}
-                    />
-                  ) : (
-                    <Text className="text-white flex-1">{vehicle.engine_type || 'N/A'}</Text>
-                  )}
+              ) : (
+                <TouchableOpacity 
+                  onPress={handleEditClient} 
+                  className="p-3 bg-blue-600 rounded-xl"
+                >
+                  <Edit size={20} color="white" />
+                </TouchableOpacity>
+              )}
+            </View>
+
+            <View className={`gap-4 ${isTablet ? 'grid grid-cols-2' : ''}`}>
+              <View className="bg-gray-700/50 p-4 rounded-xl">
+                <View className="flex-row items-center mb-2">
+                  <User size={20} color="#6b7280" />
+                  <Text className="text-gray-400 ml-2 font-bold">Personal Info</Text>
                 </View>
-                <View className="flex-row">
-                  <Text className="text-gray-400 font-bold w-28">Color:</Text>
-                  {editingVehicleId === vehicle.id ? (
-                    <TextInput
-                      className="flex-1 bg-gray-600 text-white p-1 rounded"
-                      value={vehicleEditData?.color}
-                      onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, color: text })}
-                    />
-                  ) : (
-                    <Text className="text-white flex-1">{vehicle.color || 'N/A'}</Text>
-                  )}
-                </View>
-                <View className="flex-row">
-                  <Text className="text-gray-400 font-bold w-28">Mileage:</Text>
-                  {editingVehicleId === vehicle.id ? (
-                    <TextInput
-                      className="flex-1 bg-gray-600 text-white p-1 rounded"
-                      value={vehicleEditData?.mileage}
-                      onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, mileage: text })}
-                      keyboardType="numeric"
-                    />
-                  ) : (
-                    <Text className="text-white flex-1">{vehicle.mileage || 'N/A'}</Text>
-                  )}
-                </View>
-                {vehicle.notes && (
-                  <View className="flex-row">
-                    <Text className="text-gray-400 font-bold w-28">Notes:</Text>
-                    {editingVehicleId === vehicle.id ? (
+                <View className="space-y-2">
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-400">Email:</Text>
+                    {isEditingClient ? (
                       <TextInput
-                        className="flex-1 bg-gray-600 text-white p-1 rounded"
-                        value={vehicleEditData?.notes}
-                        onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, notes: text })}
-                        multiline
+                        className="flex-1 bg-gray-600 text-white p-2 rounded ml-2"
+                        value={clientEditData.email}
+                        onChangeText={(text) => setClientEditData({ ...clientEditData, email: text })}
                       />
                     ) : (
-                      <Text className="text-white flex-1">{vehicle.notes}</Text>
+                      <Text className="text-white">{customer.email}</Text>
                     )}
                   </View>
-                )}
-              </View>
-            </View>
-          ))
-        ) : (
-          <Text className="text-gray-400 text-center">No vehicles found for this client.</Text>
-        )}
-      </View>
-
-      {/* Service Records Section */}
-      <View className="bg-gray-800 p-6 rounded-xl mb-6">
-        <View className="flex-row justify-between items-center mb-4">
-          <Text className="text-white text-2xl font-bold">Service Records</Text>
-          <TouchableOpacity onPress={handleAddService} className="p-2 bg-green-600 rounded-full">
-            <Plus size={20} color="white" />
-          </TouchableOpacity>
-        </View>
-        {clientServices && clientServices.length > 0 ? (
-          clientServices.map((service) => (
-            <View key={service.id} className="bg-gray-700 p-4 rounded-lg mb-4">
-              <View className="flex-row justify-between items-center">
-                <Text className="text-white text-lg font-bold">{service.service_type}</Text>
-                <View className="flex-row items-center">
-                  <DollarSign size={14} color={service.paid_status ? "#10b981" : "#ef4444"} />
-                  <Text className={`ml-1 ${service.paid_status ? 'text-green-400' : 'text-red-400'}`}>
-                    {formatCurrency(service.service_cost || 0)}
-                  </Text>
-                  <Text className={`ml-2 text-xs ${service.paid_status ? 'text-green-400' : 'text-red-400'}`}>
-                    {service.paid_status ? 'Paid' : 'Unpaid'}
-                  </Text>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-400">Phone:</Text>
+                    {isEditingClient ? (
+                      <TextInput
+                        className="flex-1 bg-gray-600 text-white p-2 rounded ml-2"
+                        value={clientEditData.phone_number}
+                        onChangeText={(text) => setClientEditData({ ...clientEditData, phone_number: text })}
+                      />
+                    ) : (
+                      <Text className="text-white">{customer.phone_number}</Text>
+                    )}
+                  </View>
                 </View>
               </View>
-              <Text className="text-gray-400 text-sm">
-                Date: {formatDate(service.created_at)}
-              </Text>
-              {service.notes && (
-                <Text className="text-gray-400 text-sm mt-1">Notes: {service.notes}</Text>
-              )}
-              {/* {service.service_expenses && service.service_expenses !== '0' && (
-                <Text className="text-gray-400 text-sm mt-1">
-                  Expenses: {formatCurrency(parseFloat(service.service_expenses))}
-                </Text>
-              )} */}
-              {(() => {
-                const expenses = Number(service.service_expenses || 0); // Convert safely
-                if (expenses > 0) {
-                  return (
-                    <Text className="text-gray-400 text-sm mt-1">
-                      Expenses: {formatCurrency(expenses)}
-                    </Text>
-                  );
-                }
-                return null;
-              })()}
+
+              <View className="bg-gray-700/50 p-4 rounded-xl">
+                <View className="flex-row items-center mb-2">
+                  <MapPin size={20} color="#6b7280" />
+                  <Text className="text-gray-400 ml-2 font-bold">Address & Finance</Text>
+                </View>
+                <View className="space-y-2">
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-400">Address:</Text>
+                    {isEditingClient ? (
+                      <TextInput
+                        className="flex-1 bg-gray-600 text-white p-2 rounded ml-2"
+                        value={clientEditData.address}
+                        onChangeText={(text) => setClientEditData({ ...clientEditData, address: text })}
+                      />
+                    ) : (
+                      <Text className="text-white text-right">{customer.address || 'N/A'}</Text>
+                    )}
+                  </View>
+                  <View className="flex-row justify-between">
+                    <Text className="text-gray-400">Total Spent:</Text>
+                    <Text className="text-green-400 font-bold">{formatCurrency(customer.total_spent || 0)}</Text>
+                  </View>
+                </View>
+              </View>
             </View>
-          ))
-        ) : (
-          <Text className="text-gray-400 text-center">No service records found for this client.</Text>
-        )}
-      </View>
-    </ScrollView>
+          </View>
+
+          {/* Vehicles Section */}
+          <View className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 mb-6 shadow-2xl">
+            <View className="flex-row justify-between items-center mb-6">
+              <View className="flex-row items-center">
+                <Car size={24} color="#4F46E5" />
+                <Text className="text-white text-2xl font-bold ml-3">Vehicles</Text>
+                <Text className="text-gray-400 ml-3">({clientVehicles?.length || 0})</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={handleAddVehicle} 
+                className="bg-green-600 px-4 py-3 rounded-xl flex-row items-center"
+              >
+                <Plus size={20} color="white" />
+                <Text className="text-white font-bold ml-2">Add Vehicle</Text>
+              </TouchableOpacity>
+            </View>
+
+            {clientVehicles && clientVehicles.length > 0 ? (
+              <View className={`gap-4 ${isTablet ? 'grid grid-cols-2' : ''}`}>
+                {clientVehicles.map((vehicle) => (
+                  <View key={vehicle.id} className="bg-gray-700/50 p-5 rounded-xl border border-gray-600">
+                    <View className="flex-row justify-between items-start mb-4">
+                      <View className="flex-1">
+                        <Text className="text-white text-xl font-bold mb-1">{vehicle.make}</Text>
+                        <Text className="text-gray-400 text-sm">{vehicle.licence_plate}</Text>
+                      </View>
+                      {editingVehicleId === vehicle.id ? (
+                        <View className="flex-row space-x-2">
+                          <TouchableOpacity 
+                            onPress={handleSaveVehicle} 
+                            className="p-2 bg-green-600 rounded-lg"
+                          >
+                            <Save size={16} color="white" />
+                          </TouchableOpacity>
+                          <TouchableOpacity 
+                            onPress={handleCancelEdit} 
+                            className="p-2 bg-red-600 rounded-lg"
+                          >
+                            <X size={16} color="white" />
+                          </TouchableOpacity>
+                        </View>
+                      ) : (
+                        <TouchableOpacity 
+                          onPress={() => handleEditVehicle(vehicle)} 
+                          className="p-2 bg-blue-600 rounded-lg"
+                        >
+                          <Edit size={16} color="white" />
+                        </TouchableOpacity>
+                      )}
+                    </View>
+
+                    <View className="grid grid-cols-2 gap-3">
+                      <View className="flex-row items-center">
+                        <Gauge size={16} color="#6b7280" />
+                        <Text className="text-gray-400 ml-2 text-sm">Mileage:</Text>
+                      </View>
+                      <Text className="text-white text-sm">
+                        {editingVehicleId === vehicle.id ? (
+                          <TextInput
+                            className="bg-gray-600 text-white p-1 rounded"
+                            value={vehicleEditData?.mileage}
+                            onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, mileage: text })}
+                          />
+                        ) : (
+                          vehicle.mileage || 'N/A'
+                        )}
+                      </Text>
+
+                      <View className="flex-row items-center">
+                        <Settings size={16} color="#6b7280" />
+                        <Text className="text-gray-400 ml-2 text-sm">Engine:</Text>
+                      </View>
+                      <Text className="text-white text-sm">
+                        {editingVehicleId === vehicle.id ? (
+                          <TextInput
+                            className="bg-gray-600 text-white p-1 rounded"
+                            value={vehicleEditData?.engine_type}
+                            onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, engine_type: text })}
+                          />
+                        ) : (
+                          vehicle.engine_type || 'N/A'
+                        )}
+                      </Text>
+
+                      <View className="flex-row items-center">
+                        <Fuel size={16} color="#6b7280" />
+                        <Text className="text-gray-400 ml-2 text-sm">Fuel:</Text>
+                      </View>
+                      {editingVehicleId === vehicle.id ? (
+                        <TextInput
+                          className="bg-gray-600 text-white p-1 rounded"
+                          value={vehicleEditData?.fuel_type}
+                          onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, fuel_type: text })}
+                        />
+                      ) : (
+                        <Text className="text-white text-sm">{vehicle.fuel_type || 'N/A'}</Text>
+                      )}
+
+                      {vehicle.color && (
+                        <>
+                          <View className="flex-row items-center">
+                            <Text className="text-gray-400 text-sm">Color:</Text>
+                          </View>
+                          <Text className="text-white text-sm">{vehicle.color}</Text>
+                        </>
+                      )}
+                    </View>
+
+                    <Text className="text-gray-400 text-sm">Notes:</Text>
+                    {editingVehicleId === vehicle.id ? (
+                      <TextInput
+                        className="bg-gray-600 text-white p-2 rounded mt-2"
+                        multiline
+                        value={vehicleEditData?.notes}
+                        onChangeText={(text) => setVehicleEditData({ ...vehicleEditData, notes: text })}
+                        placeholder="Enter notes"
+                        placeholderTextColor="#9CA3AF"
+                      />
+                    ) : (
+                      <View className="mt-3 p-2 bg-gray-600 rounded">
+                        <Text className="text-gray-300 text-sm">{vehicle.notes || 'No notes available'}</Text>
+                      </View>
+                    )}
+                  </View>
+                ))}
+              </View>
+            ) : (
+              <View className="bg-gray-700/30 p-8 rounded-xl border border-dashed border-gray-600">
+                <Text className="text-gray-400 text-center text-lg">No vehicles registered</Text>
+                <Text className="text-gray-500 text-center mt-2">Add the first vehicle for this client</Text>
+              </View>
+            )}
+          </View>
+
+          {/* Service Records Section */}
+          <View className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-6 shadow-2xl">
+            <View className="flex-row justify-between items-center mb-6">
+              <View className="flex-row items-center">
+                <Settings size={24} color="#4F46E5" />
+                <Text className="text-white text-2xl font-bold ml-3">Service Records</Text>
+                <Text className="text-gray-400 ml-3">({clientServices?.length || 0})</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={handleAddService} 
+                className="bg-green-600 px-4 py-3 rounded-xl flex-row items-center"
+              >
+                <Plus size={20} color="white" />
+                <Text className="text-white font-bold ml-2">Add Service</Text>
+              </TouchableOpacity>
+            </View>
+
+            {clientServices && clientServices.length > 0 ? (
+              <View className="gap-4">
+                {clientServices.map((service) => (
+                  <TouchableOpacity 
+                    key={service.id} 
+                    onPress={() => handleViewService(service)}
+                    className="bg-gray-700/50 p-5 rounded-xl border border-gray-600 active:bg-gray-600/50"
+                  >
+                    <View className="flex-row justify-between items-center mb-3">
+                      <Text className="text-white text-lg font-bold">{service.service_type}</Text>
+                      <View className="flex-row items-center">
+                        <DollarSign size={16} color={getStatusColor(service.paid_status || false)} />
+                        <Text className={`ml-1 font-bold ${service.paid_status ? 'text-green-400' : 'text-red-400'}`}>
+                          {formatCurrency(service.service_cost || 0)}
+                        </Text>
+                      </View>
+                    </View>
+
+                    <View className="flex-row justify-between items-center">
+                      <View className="flex-row items-center">
+                        <Calendar size={14} color="#6b7280" />
+                        <Text className="text-gray-400 text-sm ml-2">{formatDate(service.created_at)}</Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <View 
+                          className={`px-3 py-1 rounded-full ${service.paid_status ? 'bg-green-400/20' : 'bg-red-400/20'}`}
+                        >
+                          <Text className={`text-xs font-bold ${service.paid_status ? 'text-green-400' : 'text-red-400'}`}>
+                            {getStatusText(service.paid_status || false)}
+                          </Text>
+                        </View>
+                        <Eye size={16} color="#6b7280" className="ml-3" />
+                      </View>
+                    </View>
+
+                    {service.notes && (
+                      <Text className="text-gray-400 text-sm mt-3" numberOfLines={2}>
+                        {service.notes}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            ) : (
+              <View className="bg-gray-700/30 p-8 rounded-xl border border-dashed border-gray-600">
+                <Text className="text-gray-400 text-center text-lg">No service records</Text>
+                <Text className="text-gray-500 text-center mt-2">Add the first service for this client</Text>
+              </View>
+            )}
+          </View>
+        </View>
+      </ScrollView>
+
+      <ServiceModal 
+        visible={serviceModalVisible}
+        service={selectedService}
+        onClose={() => setServiceModalVisible(false)}
+      />
+    </View>
   );
 }

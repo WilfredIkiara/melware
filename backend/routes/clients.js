@@ -15,7 +15,14 @@ router.get('/:id',  clientController.getClientDetails);
 // authenticateToken,
 router.put('/:id',  clientController.updateClient);
 router.get('/:id/vehicles', clientController.getClientVehicles);
-
+// router.put('/vehicles/:vehicleId', clientController.updateClientVehicle);
 // Get client services
 router.get('/:id/services', clientController.getClientServices);
+router.get('/getStaff/:id', clientController.getClientStaff);
+// Add to clients.js
+// router.post('/:id/services', clientController.addClientService);
+router.post('/:id/vehicles', clientController.addClientVehicle);
+router.post('/:id/services', clientController.addClientService);
+router.put('/vehicles/:vehicleId', clientController.updateClientVehicle);
+
 module.exports = router;

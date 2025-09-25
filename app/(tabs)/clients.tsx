@@ -1,15 +1,270 @@
 
+// import { BlurView } from 'expo-blur';
+// import { useRouter } from 'expo-router';
+// import { RotateCcw, Search, UserPlus } from 'lucide-react';
+// import React, { useCallback, useEffect, useMemo, useState } from 'react';
+// import {
+//   ActivityIndicator,
+//   FlatList,
+//   Modal,
+//   Text,
+//   TextInput,
+//   TouchableOpacity,
+//   View,
+// } from 'react-native';
+// import { GradientCard } from '../../lib/components/GradientCard';
+// import { Colors } from '../../lib/constants/colors';
+// import { useClientData } from '../../lib/pages/clientData';
+
+// interface Customer {
+//   id: string;
+//   first_name: string;
+//   last_name: string;
+//   email: string;
+//   phone_number: string;
+//   total_spent: number;
+// }
+
+// export default function Clients() {
+//   const router = useRouter();
+//   const { clients, loading, error, fetchClients } = useClientData();
+//   const [searchQuery, setSearchQuery] = useState('');
+//   const [showAddModal, setShowAddModal] = useState(false);
+//   const [newClient, setNewClient] = useState({
+//     first_name: '',
+//     last_name: '',
+//     email: '',
+//     phone_number: '',
+//   });
+
+//   const fetchClientsCallback = useCallback(() => {
+//     fetchClients();
+//   }, [fetchClients]);
+
+//   useEffect(() => {
+//     fetchClientsCallback();
+//   }, [fetchClientsCallback]);
+
+//   const filteredClients = useMemo(() => {
+//     if (!clients) return [];
+//     const lowerCaseQuery = searchQuery.toLowerCase();
+//     return clients.filter(client =>
+//       client.first_name.toLowerCase().includes(lowerCaseQuery) ||
+//       client.last_name.toLowerCase().includes(lowerCaseQuery) ||
+//       client.email.toLowerCase().includes(lowerCaseQuery) ||
+//       client.phone_number.toLowerCase().includes(lowerCaseQuery)
+//     );
+//   }, [clients, searchQuery]);
+
+//   const handleAddClient = async () => {
+//     try {
+//       console.log("Adding new client:", newClient);
+//       // API call implementation here
+//       setNewClient({ first_name: '', last_name: '', email: '', phone_number: '' });
+//       setShowAddModal(false);
+//     } catch (err) {
+//       console.error("Error adding client:", err);
+//     }
+//   };
+
+//   if (loading) {
+//     return (
+//       <View className="flex-1 bg-[#0A0F1E] justify-center items-center">
+//         <ActivityIndicator size="large" color={Colors.primary} />
+//         <Text className="text-white mt-4 text-lg">Loading clients...</Text>
+//       </View>
+//     );
+//   }
+
+//   if (error) {
+//     return (
+//       <View className="flex-1 bg-[#0A0F1E] justify-center items-center p-6">
+//         <Text className="text-red-400 text-lg text-center mb-4">Error: {error}</Text>
+//         <TouchableOpacity onPress={fetchClients} className="bg-blue-600 px-6 py-3 rounded-xl">
+//           <Text className="text-white font-semibold">Try Again</Text>
+//         </TouchableOpacity>
+//       </View>
+//     );
+//   }
+
+//   const renderClientItem = ({ item }: { item: Customer }) => (
+//     <TouchableOpacity
+//       onPress={() => router.push({ pathname: "/ClientDetails", params: { id: item.id } })}
+//       className="mb-4"
+//     >
+//       <GradientCard colors={Colors.gradient.darkToDarker}>
+//         <View className="flex-row items-center">
+//           <View className="bg-purple-600 rounded-full w-14 h-14 items-center justify-center mr-4">
+//             <Text className="text-white font-bold text-xl">
+//               {item.first_name[0]}{item.last_name[0]}
+//             </Text>
+//           </View>
+//           <View className="flex-1">
+//             <Text className="text-white font-semibold text-lg">
+//               {item.first_name} {item.last_name}
+//             </Text>
+//             <Text className="text-gray-400 text-sm">{item.email}</Text>
+//             <Text className="text-gray-400 text-sm">{item.phone_number}</Text>
+//           </View>
+//           <View className="items-end">
+//             <Text className="text-green-400 text-lg font-semibold">
+//               ${item.total_spent?.toLocaleString() || 0}
+//             </Text>
+//             <Text className="text-gray-400 text-xs">Total Spent</Text>
+//           </View>
+//         </View>
+//       </GradientCard>
+//     </TouchableOpacity>
+//   );
+
+//   return (
+//     <View className="flex-1 bg-[#0A0F1E] p-4 pt-14">
+//       {/* Header */}
+//       <View className="flex-row justify-between items-center mb-6">
+//         <Text className="text-white text-3xl font-bold">Clients</Text>
+//         <View className="flex-row space-x-3">
+//           <TouchableOpacity
+//             onPress={fetchClients}
+//             className="p-3 bg-gray-700 rounded-full"
+//           >
+//             <RotateCcw size={20} color="white" />
+//           </TouchableOpacity>
+//           <TouchableOpacity
+//             onPress={() => setShowAddModal(true)}
+//             className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 rounded-xl flex-row items-center space-x-2"
+//           >
+//             <UserPlus size={20} color="white" />
+//             <Text className="text-white font-semibold">Add Client</Text>
+//           </TouchableOpacity>
+//         </View>
+//       </View>
+
+//       {/* Search */}
+//       <View className="relative mb-6">
+//         <TextInput
+//           className="bg-gray-800 text-white p-4 pl-12 rounded-xl text-base border border-gray-700"
+//           placeholder="Search clients..."
+//           placeholderTextColor="#9ca3af"
+//           value={searchQuery}
+//           onChangeText={setSearchQuery}
+//         />
+//         <Search size={20} color="#9ca3af" className="absolute left-4 top-4" />
+//       </View>
+
+//       {/* Clients List */}
+//       {filteredClients.length > 0 ? (
+//         <FlatList
+//           data={filteredClients}
+//           renderItem={renderClientItem}
+//           keyExtractor={(item) => item.id}
+//           showsVerticalScrollIndicator={false}
+//           contentContainerStyle={{ paddingBottom: 20 }}
+//         />
+//       ) : (
+//         <View className="flex-1 justify-center items-center py-12">
+//           <Text className="text-gray-400 text-lg">No clients found</Text>
+//         </View>
+//       )}
+
+//       {/* Add Client Modal */}
+//       <Modal
+//         animationType="fade"
+//         transparent={true}
+//         visible={showAddModal}
+//         onRequestClose={() => setShowAddModal(false)}
+//       >
+//         <BlurView intensity={20} className="flex-1 justify-center items-center p-4">
+//           <View className="w-full max-w-md bg-gray-800 rounded-2xl border border-gray-700 p-6">
+//             <View className="flex-row justify-between items-center mb-6">
+//               <Text className="text-white text-2xl font-bold">Add New Client</Text>
+//               <TouchableOpacity onPress={() => setShowAddModal(false)}>
+//                 <Text className="text-gray-400 text-2xl">×</Text>
+//               </TouchableOpacity>
+//             </View>
+
+//             <View className="space-y-4">
+//               <View className="flex-row space-x-3">
+//                 <View className="flex-1">
+//                   <Text className="text-gray-400 text-sm mb-2">First Name</Text>
+//                   <TextInput
+//                     placeholder="First name"
+//                     placeholderTextColor="#6b7280"
+//                     value={newClient.first_name}
+//                     onChangeText={(v) => setNewClient({ ...newClient, first_name: v })}
+//                     className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+//                   />
+//                 </View>
+//                 <View className="flex-1">
+//                   <Text className="text-gray-400 text-sm mb-2">Last Name</Text>
+//                   <TextInput
+//                     placeholder="Last name"
+//                     placeholderTextColor="#6b7280"
+//                     value={newClient.last_name}
+//                     onChangeText={(v) => setNewClient({ ...newClient, last_name: v })}
+//                     className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+//                   />
+//                 </View>
+//               </View>
+
+//               <View>
+//                 <Text className="text-gray-400 text-sm mb-2">Email</Text>
+//                 <TextInput
+//                   placeholder="Email address"
+//                   placeholderTextColor="#6b7280"
+//                   value={newClient.email}
+//                   onChangeText={(v) => setNewClient({ ...newClient, email: v })}
+//                   className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+//                   keyboardType="email-address"
+//                 />
+//               </View>
+
+//               <View>
+//                 <Text className="text-gray-400 text-sm mb-2">Phone</Text>
+//                 <TextInput
+//                   placeholder="Phone number"
+//                   placeholderTextColor="#6b7280"
+//                   value={newClient.phone_number}
+//                   onChangeText={(v) => setNewClient({ ...newClient, phone_number: v })}
+//                   className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+//                   keyboardType="phone-pad"
+//                 />
+//               </View>
+//             </View>
+
+//             <View className="flex-row space-x-3 mt-6">
+//               <TouchableOpacity
+//                 onPress={() => setShowAddModal(false)}
+//                 className="flex-1 bg-gray-700 py-3 rounded-lg"
+//               >
+//                 <Text className="text-white text-center font-semibold">Cancel</Text>
+//               </TouchableOpacity>
+//               <TouchableOpacity
+//                 onPress={handleAddClient}
+//                 className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg"
+//               >
+//                 <Text className="text-white text-center font-semibold">Add Client</Text>
+//               </TouchableOpacity>
+//             </View>
+//           </View>
+//         </BlurView>
+//       </Modal>
+//     </View>
+//   );
+// }
+
 import { BlurView } from 'expo-blur';
 import { useRouter } from 'expo-router';
 import { RotateCcw, Search, UserPlus } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Dimensions,
   FlatList,
   Modal,
   Text,
   TextInput,
   TouchableOpacity,
+  useWindowDimensions,
   View,
 } from 'react-native';
 import { GradientCard } from '../../lib/components/GradientCard';
@@ -25,9 +280,13 @@ interface Customer {
   total_spent: number;
 }
 
+// Get initial screen dimensions
+const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+
 export default function Clients() {
   const router = useRouter();
   const { clients, loading, error, fetchClients } = useClientData();
+  const { width, height } = useWindowDimensions();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newClient, setNewClient] = useState({
@@ -36,6 +295,45 @@ export default function Clients() {
     email: '',
     phone_number: '',
   });
+
+  // Responsive sizing functions
+  const getResponsiveFontSize = (baseSize: number) => {
+    const scaleFactor = Math.min(width / 375, 1.2); // Base width 375 (iPhone 6/7/8)
+    return Math.round(baseSize * scaleFactor);
+  };
+
+  const getResponsivePadding = () => {
+    if (width < 375) return 3; // Small phones
+    if (width < 768) return 4; // Normal phones
+    if (width < 1024) return 6; // Tablets
+    return 8; // Large tablets/desktop
+  };
+
+  const getResponsiveMargin = () => {
+    if (width < 375) return 3; // Small phones
+    if (width < 768) return 4; // Normal phones
+    return 6; // Tablets and larger
+  };
+
+  const getCardLayout = () => {
+    if (width < 480) {
+      return 'vertical'; // Stack layout for small screens
+    }
+    return 'horizontal'; // Side-by-side layout for larger screens
+  };
+
+  const getModalWidth = () => {
+    if (width < 375) return '95%'; // Small phones
+    if (width < 768) return '90%'; // Normal phones
+    if (width < 1024) return '75%'; // Tablets
+    return '50%'; // Large screens
+  };
+
+  const getAvatarSize = () => {
+    if (width < 375) return 12; // Small phones
+    if (width < 768) return 14; // Normal phones
+    return 16; // Tablets and larger
+  };
 
   useEffect(() => {
     fetchClients();
@@ -63,11 +361,36 @@ export default function Clients() {
     }
   };
 
+  // Responsive styles
+  const responsiveStyles = {
+    headerText: {
+      fontSize: getResponsiveFontSize(28),
+    },
+    cardTitle: {
+      fontSize: getResponsiveFontSize(16),
+    },
+    cardText: {
+      fontSize: getResponsiveFontSize(14),
+    },
+    smallText: {
+      fontSize: getResponsiveFontSize(12),
+    },
+    padding: getResponsivePadding(),
+    margin: getResponsiveMargin(),
+    avatarSize: getAvatarSize(),
+    modalWidth: getModalWidth(),
+    isSmallScreen: width < 375,
+    isTablet: width >= 768,
+    isLargeScreen: width >= 1024,
+  };
+
   if (loading) {
     return (
       <View className="flex-1 bg-[#0A0F1E] justify-center items-center">
-        <ActivityIndicator size="large" color={Colors.primary} />
-        <Text className="text-white mt-4 text-lg">Loading clients...</Text>
+        <ActivityIndicator size={responsiveStyles.isTablet ? "large" : "small"} color={Colors.primary} />
+        <Text className="text-white mt-4" style={{ fontSize: getResponsiveFontSize(16) }}>
+          Loading clients...
+        </Text>
       </View>
     );
   }
@@ -75,62 +398,101 @@ export default function Clients() {
   if (error) {
     return (
       <View className="flex-1 bg-[#0A0F1E] justify-center items-center p-6">
-        <Text className="text-red-400 text-lg text-center mb-4">Error: {error}</Text>
+        <Text className="text-red-400 text-center mb-4" style={{ fontSize: getResponsiveFontSize(16) }}>
+          Error: {error}
+        </Text>
         <TouchableOpacity onPress={fetchClients} className="bg-blue-600 px-6 py-3 rounded-xl">
-          <Text className="text-white font-semibold">Try Again</Text>
+          <Text className="text-white font-semibold" style={{ fontSize: getResponsiveFontSize(14) }}>
+            Try Again
+          </Text>
         </TouchableOpacity>
       </View>
     );
   }
 
-  const renderClientItem = ({ item }: { item: Customer }) => (
-    <TouchableOpacity
-      onPress={() => router.push({ pathname: "/ClientDetails", params: { id: item.id } })}
-      className="mb-4"
-    >
-      <GradientCard colors={Colors.gradient.darkToDarker}>
-        <View className="flex-row items-center">
-          <View className="bg-purple-600 rounded-full w-14 h-14 items-center justify-center mr-4">
-            <Text className="text-white font-bold text-xl">
-              {item.first_name[0]}{item.last_name[0]}
-            </Text>
+  const renderClientItem = ({ item }: { item: Customer }) => {
+    const cardLayout = getCardLayout();
+    const isVerticalLayout = cardLayout === 'vertical';
+    
+    return (
+      <TouchableOpacity
+        onPress={() => router.push({ pathname: "/ClientDetails", params: { id: item.id } })}
+        className="mb-4"
+      >
+        <GradientCard colors={Colors.gradient.darkToDarker}>
+          <View className={`${isVerticalLayout ? 'flex-col' : 'flex-row'} items-center`}>
+            <View 
+              className={`bg-purple-600 rounded-full items-center justify-center mr-4 ${
+                isVerticalLayout ? 'mb-3' : ''
+              }`}
+              style={{
+                width: responsiveStyles.avatarSize * 3.5,
+                height: responsiveStyles.avatarSize * 3.5,
+              }}
+            >
+              <Text className="text-white font-bold" style={{ fontSize: getResponsiveFontSize(16) }}>
+                {item.first_name[0]}{item.last_name[0]}
+              </Text>
+            </View>
+            
+            <View className={`flex-1 ${isVerticalLayout ? 'items-center' : ''}`}>
+              <Text className="text-white font-semibold text-center" style={responsiveStyles.cardTitle}>
+                {item.first_name} {item.last_name}
+              </Text>
+              <Text className="text-gray-400 text-center" style={responsiveStyles.smallText}>
+                {item.email}
+              </Text>
+              <Text className="text-gray-400 text-center" style={responsiveStyles.smallText}>
+                {item.phone_number}
+              </Text>
+            </View>
+            
+            <View className={`items-end ${isVerticalLayout ? 'mt-3' : ''} ${isVerticalLayout ? 'items-center' : ''}`}>
+              <Text className="text-green-400 font-semibold text-center" style={responsiveStyles.cardTitle}>
+                ${item.total_spent?.toLocaleString() || 0}
+              </Text>
+              <Text className="text-gray-400 text-center" style={responsiveStyles.smallText}>
+                Total Spent
+              </Text>
+            </View>
           </View>
-          <View className="flex-1">
-            <Text className="text-white font-semibold text-lg">
-              {item.first_name} {item.last_name}
-            </Text>
-            <Text className="text-gray-400 text-sm">{item.email}</Text>
-            <Text className="text-gray-400 text-sm">{item.phone_number}</Text>
-          </View>
-          <View className="items-end">
-            <Text className="text-green-400 text-lg font-semibold">
-              ${item.total_spent?.toLocaleString() || 0}
-            </Text>
-            <Text className="text-gray-400 text-xs">Total Spent</Text>
-          </View>
-        </View>
-      </GradientCard>
-    </TouchableOpacity>
-  );
+        </GradientCard>
+      </TouchableOpacity>
+    );
+  };
 
   return (
-    <View className="flex-1 bg-[#0A0F1E] p-4 pt-14">
+    <View 
+      className="flex-1 bg-[#0A0F1E] pt-14"
+      style={{ paddingHorizontal: responsiveStyles.padding }}
+    >
       {/* Header */}
-      <View className="flex-row justify-between items-center mb-6">
-        <Text className="text-white text-3xl font-bold">Clients</Text>
-        <View className="flex-row space-x-3">
+      <View className={`flex-row justify-between items-center mb-6 ${
+        responsiveStyles.isSmallScreen ? 'flex-col space-y-3' : ''
+      }`}>
+        <Text className="text-white font-bold" style={responsiveStyles.headerText}>
+          Clients
+        </Text>
+        <View className={`flex-row space-x-3 ${responsiveStyles.isSmallScreen ? 'justify-center' : ''}`}>
           <TouchableOpacity
             onPress={fetchClients}
             className="p-3 bg-gray-700 rounded-full"
+            style={{ padding: responsiveStyles.padding * 0.75 }}
           >
-            <RotateCcw size={20} color="white" />
+            <RotateCcw size={getResponsiveFontSize(16)} color="white" />
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => setShowAddModal(true)}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 px-4 py-3 rounded-xl flex-row items-center space-x-2"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl flex-row items-center space-x-2"
+            style={{ 
+              paddingHorizontal: responsiveStyles.padding * 1.5,
+              paddingVertical: responsiveStyles.padding * 0.75
+            }}
           >
-            <UserPlus size={20} color="white" />
-            <Text className="text-white font-semibold">Add Client</Text>
+            <UserPlus size={getResponsiveFontSize(16)} color="white" />
+            <Text className="text-white font-semibold" style={{ fontSize: getResponsiveFontSize(14) }}>
+              Add Client
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -138,13 +500,26 @@ export default function Clients() {
       {/* Search */}
       <View className="relative mb-6">
         <TextInput
-          className="bg-gray-800 text-white p-4 pl-12 rounded-xl text-base border border-gray-700"
+          className="bg-gray-800 text-white rounded-xl border border-gray-700"
           placeholder="Search clients..."
           placeholderTextColor="#9ca3af"
           value={searchQuery}
           onChangeText={setSearchQuery}
+          style={{
+            padding: responsiveStyles.padding * 1.5,
+            paddingLeft: responsiveStyles.padding * 3,
+            fontSize: getResponsiveFontSize(14),
+          }}
         />
-        <Search size={20} color="#9ca3af" className="absolute left-4 top-4" />
+        <Search 
+          size={getResponsiveFontSize(16)} 
+          color="#9ca3af" 
+          style={{ 
+            position: 'absolute', 
+            left: responsiveStyles.padding * 1.5, 
+            top: responsiveStyles.padding * 1.5 
+          }} 
+        />
       </View>
 
       {/* Clients List */}
@@ -154,11 +529,16 @@ export default function Clients() {
           renderItem={renderClientItem}
           keyExtractor={(item) => item.id}
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingBottom: 20 }}
+          contentContainerStyle={{ 
+            paddingBottom: responsiveStyles.padding * 5,
+            paddingTop: responsiveStyles.padding * 0.5
+          }}
         />
       ) : (
         <View className="flex-1 justify-center items-center py-12">
-          <Text className="text-gray-400 text-lg">No clients found</Text>
+          <Text className="text-gray-400" style={{ fontSize: getResponsiveFontSize(16) }}>
+            No clients found
+          </Text>
         </View>
       )}
 
@@ -170,75 +550,115 @@ export default function Clients() {
         onRequestClose={() => setShowAddModal(false)}
       >
         <BlurView intensity={20} className="flex-1 justify-center items-center p-4">
-          <View className="w-full max-w-md bg-gray-800 rounded-2xl border border-gray-700 p-6">
+          <View 
+            className="bg-gray-800 rounded-2xl border border-gray-700 p-6"
+            style={{ width: responsiveStyles.modalWidth as any, maxWidth: 500 }}
+          >
             <View className="flex-row justify-between items-center mb-6">
-              <Text className="text-white text-2xl font-bold">Add New Client</Text>
-              <TouchableOpacity onPress={() => setShowAddModal(false)}>
-                <Text className="text-gray-400 text-2xl">×</Text>
+              <Text className="text-white font-bold" style={{ fontSize: getResponsiveFontSize(20) }}>
+                Add New Client
+              </Text>
+              <TouchableOpacity 
+                onPress={() => setShowAddModal(false)}
+                style={{ padding: responsiveStyles.padding * 0.5 }}
+              >
+                <Text className="text-gray-400" style={{ fontSize: getResponsiveFontSize(24) }}>×</Text>
               </TouchableOpacity>
             </View>
 
             <View className="space-y-4">
-              <View className="flex-row space-x-3">
-                <View className="flex-1">
-                  <Text className="text-gray-400 text-sm mb-2">First Name</Text>
+              <View className={`${responsiveStyles.isSmallScreen ? 'flex-col space-y-4' : 'flex-row space-x-3'}`}>
+                <View className={responsiveStyles.isSmallScreen ? 'w-full' : 'flex-1'}>
+                  <Text className="text-gray-400 mb-2" style={responsiveStyles.smallText}>
+                    First Name
+                  </Text>
                   <TextInput
                     placeholder="First name"
                     placeholderTextColor="#6b7280"
                     value={newClient.first_name}
                     onChangeText={(v) => setNewClient({ ...newClient, first_name: v })}
-                    className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                    className="bg-gray-700 text-white rounded-lg border border-gray-600"
+                    style={{
+                      padding: responsiveStyles.padding,
+                      fontSize: getResponsiveFontSize(14),
+                    }}
                   />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-gray-400 text-sm mb-2">Last Name</Text>
+                <View className={responsiveStyles.isSmallScreen ? 'w-full' : 'flex-1'}>
+                  <Text className="text-gray-400 mb-2" style={responsiveStyles.smallText}>
+                    Last Name
+                  </Text>
                   <TextInput
                     placeholder="Last name"
                     placeholderTextColor="#6b7280"
                     value={newClient.last_name}
                     onChangeText={(v) => setNewClient({ ...newClient, last_name: v })}
-                    className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                    className="bg-gray-700 text-white rounded-lg border border-gray-600"
+                    style={{
+                      padding: responsiveStyles.padding,
+                      fontSize: getResponsiveFontSize(14),
+                    }}
                   />
                 </View>
               </View>
 
               <View>
-                <Text className="text-gray-400 text-sm mb-2">Email</Text>
+                <Text className="text-gray-400 mb-2" style={responsiveStyles.smallText}>
+                  Email
+                </Text>
                 <TextInput
                   placeholder="Email address"
                   placeholderTextColor="#6b7280"
                   value={newClient.email}
                   onChangeText={(v) => setNewClient({ ...newClient, email: v })}
-                  className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                  className="bg-gray-700 text-white rounded-lg border border-gray-600"
+                  style={{
+                    padding: responsiveStyles.padding,
+                    fontSize: getResponsiveFontSize(14),
+                  }}
                   keyboardType="email-address"
                 />
               </View>
 
               <View>
-                <Text className="text-gray-400 text-sm mb-2">Phone</Text>
+                <Text className="text-gray-400 mb-2" style={responsiveStyles.smallText}>
+                  Phone
+                </Text>
                 <TextInput
                   placeholder="Phone number"
                   placeholderTextColor="#6b7280"
                   value={newClient.phone_number}
                   onChangeText={(v) => setNewClient({ ...newClient, phone_number: v })}
-                  className="bg-gray-700 text-white p-3 rounded-lg border border-gray-600"
+                  className="bg-gray-700 text-white rounded-lg border border-gray-600"
+                  style={{
+                    padding: responsiveStyles.padding,
+                    fontSize: getResponsiveFontSize(14),
+                  }}
                   keyboardType="phone-pad"
                 />
               </View>
             </View>
 
-            <View className="flex-row space-x-3 mt-6">
+            <View className={`flex-row space-x-3 mt-6 ${
+              responsiveStyles.isSmallScreen ? 'flex-col space-y-3 space-x-0' : ''
+            }`}>
               <TouchableOpacity
                 onPress={() => setShowAddModal(false)}
-                className="flex-1 bg-gray-700 py-3 rounded-lg"
+                className="bg-gray-700 py-3 rounded-lg"
+                style={{ flex: responsiveStyles.isSmallScreen ? 0 : 1 }}
               >
-                <Text className="text-white text-center font-semibold">Cancel</Text>
+                <Text className="text-white text-center font-semibold" style={{ fontSize: getResponsiveFontSize(14) }}>
+                  Cancel
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={handleAddClient}
-                className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg"
+                className="bg-gradient-to-r from-purple-600 to-pink-600 py-3 rounded-lg"
+                style={{ flex: responsiveStyles.isSmallScreen ? 0 : 1 }}
               >
-                <Text className="text-white text-center font-semibold">Add Client</Text>
+                <Text className="text-white text-center font-semibold" style={{ fontSize: getResponsiveFontSize(14) }}>
+                  Add Client
+                </Text>
               </TouchableOpacity>
             </View>
           </View>

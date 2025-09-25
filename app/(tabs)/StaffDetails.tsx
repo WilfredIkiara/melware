@@ -1,14 +1,14 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Calendar, Clock, Edit, Mail, MapPin, Phone, Save, User, X } from 'lucide-react-native';
+import { Calendar, Edit, Mail, MapPin, Phone, Save, User, X } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
 import { useAuth } from '../../lib/auth'; // Import your auth hook
 import { useStaffDetails } from '../../lib/pages/useStaffDetails';
@@ -109,7 +109,7 @@ export default function StaffDetails() {
     <ScrollView className="flex-1 bg-[#0A0F1E] p-4 pt-14">
       {/* Header */}
       <View className="flex-row justify-between items-center mb-6">
-        <TouchableOpacity onPress={() => router.back()} className="p-2">
+        <TouchableOpacity onPress={() => router.push("/Staff")} className="p-2">
           <X size={24} color="white" />
         </TouchableOpacity>
         <Text className="text-white text-2xl font-bold">Staff Details</Text>
@@ -233,7 +233,7 @@ export default function StaffDetails() {
       {/* Upcoming Appointments */}
       <View className="bg-gray-800 rounded-xl p-6 mb-6">
         <Text className="text-white text-xl font-bold mb-4">Upcoming Appointments</Text>
-        {appointments.length > 0 ? (
+        {/* {appointments.length > 0 ? (
           appointments.map((appointment) => (
             <View key={appointment.id} className="bg-gray-700 p-4 rounded-lg mb-3">
               <Text className="text-white font-semibold">{appointment.service_type}</Text>
@@ -259,7 +259,21 @@ export default function StaffDetails() {
           ))
         ) : (
           <Text className="text-gray-400 text-center">No upcoming appointments</Text>
-        )}
+        )} */}
+        {appointments?.length > 0 ? (
+        appointments.map((appointment) => {
+          const vehicle = appointment.client_vehicles || { make: "Unknown", licence_plate: "N/A" };
+          return (
+            <View key={appointment.id} className="bg-gray-700 p-4 rounded-lg mb-3">
+              <Text className="text-gray-400 text-sm">
+                Vehicle: {vehicle.make} ({vehicle.licence_plate})
+              </Text>
+            </View>
+          );
+        })
+      ) : (
+        <Text className="text-gray-400 text-center">No upcoming appointments</Text>
+      )}
       </View>
 
       {/* Recent Services */}

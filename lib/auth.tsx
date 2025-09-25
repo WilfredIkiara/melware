@@ -133,17 +133,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const logout = async () => {
+const logout = async () => {
+  try {
+    console.log('Starting logout process...');
+    
+    // Clear token from API service first - handle null case
+    apiService.setToken(null as any); // Temporary fix
+    
+    // Alternative: Check if your apiService.setToken can handle null
+    // If not, you might need to modify the apiService
+    
+    // Clear AsyncStorage with error handling
     try {
-      console.log('Logging out...');
-      await apiService.logout();
       await AsyncStorage.multiRemove([TOKEN_KEY, USER_KEY]);
-      setUser(null);
-      console.log('Logout completed');
-    } catch (error) {
-      console.error('Logout error:', error);
+      console.log('Storage cleared successfully');
+    } catch (storageError) {
+      console.error('Error clearing storage:', storageError);
     }
-  };
+    
+    // Clear user state
+    setUser(null);
+    
+    console.log('Logout completed successfully');
+  } catch (error) {
+    console.error('Logout error:', error);
+    // Even if there's an error, clear the local state
+    setUser(null);
+    throw error;
+  }
+};
 
   const value: AuthContextType = {
     user,

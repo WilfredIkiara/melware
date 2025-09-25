@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import LoadingScreen from '../components/LoadingScreen'
 import { AuthProvider, useAuth } from '../lib/auth'
-import { AppProvider } from '../lib/store'
 import { ThemeProvider } from '../lib/theme'
 import "./globals.css"
 
@@ -83,9 +82,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider>
         <AuthProvider>
-          <AppProvider>
             <AppNavigator />
-          </AppProvider>
         </AuthProvider>
       </ThemeProvider>
     </GestureHandlerRootView>

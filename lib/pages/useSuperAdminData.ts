@@ -129,12 +129,13 @@ interface DashboardStats {
 
 interface Activity {
   id: string;
-  profile: { name: string }; // Changed from user to profile
+  profile_id: string;
+  profiles?: { first_name: string }; // Changed from 'profile' to 'profiles'
   activity_type: string;
   description: string;
-  timestamp: string; // Updated from created_at
+  timestamp: string;
+  route?: string; // Add this if you want to show the route
 }
-
 interface WorkOrder {
   id: string;
   client_id: string;

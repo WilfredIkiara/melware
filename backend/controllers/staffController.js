@@ -148,7 +148,7 @@ exports.getStaffDetails = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Staff member not found' });
     }
 
-    // Get appointments for this staff member
+    // FIXED: Correct column names for appointments
     const { data: appointments, error: appointmentsError } = await supabase
       .from('appointments')
       .select(`
@@ -157,14 +157,14 @@ exports.getStaffDetails = async (req, res) => {
         client_vehicles(make, licence_plate)
       `)
       .eq('assigned_staff', id)
-      .gte('scheduled_time', new Date().toISOString().split('T')[0]) // Current and future appointments
+      .gte('scheduled_time', new Date().toISOString())
       .order('scheduled_time', { ascending: true });
 
     if (appointmentsError) {
-      console.error('Error fetching appointments:', appointmentsError);
+      console.error('Appointments error:', appointmentsError);
     }
 
-    // Get services performed by this staff member (this month)
+    // FIXED: Get services for this month with correct relationships
     const currentDate = new Date();
     const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
     const lastDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString();
@@ -182,7 +182,7 @@ exports.getStaffDetails = async (req, res) => {
       .order('created_at', { ascending: false });
 
     if (servicesError) {
-      console.error('Error fetching services:', servicesError);
+      console.error('Services error:', servicesError);
     }
 
     // Calculate monthly stats

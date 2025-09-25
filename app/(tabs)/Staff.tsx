@@ -4,14 +4,14 @@ import { router } from 'expo-router';
 import { Lock, Mail, MapPin, Phone, Plus, Search, User, X } from 'lucide-react';
 import React, { useState } from 'react';
 import {
-  ActivityIndicator,
-  FlatList,
-  Modal,
-  Pressable,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    FlatList,
+    Modal,
+    Pressable,
+    Text,
+    TextInput,
+    TouchableOpacity,
+    View,
 } from 'react-native';
 import { GradientCard } from '../../lib/components/GradientCard';
 import { Colors } from '../../lib/constants/colors';
