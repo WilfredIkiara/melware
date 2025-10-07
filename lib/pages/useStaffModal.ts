@@ -27,7 +27,7 @@ export function useStaffData() {
     setLoading(true);
     setError(null);
     try {
-      const data = await apiService.get('/api/client/getStaff');
+      const data = await apiService.get('/api/staff');
       setStaff(data.staff || []);
     } catch (err) {
       console.error('Error fetching staff:', err);

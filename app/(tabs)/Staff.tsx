@@ -4,21 +4,23 @@ import { router } from 'expo-router';
 import { Lock, Mail, MapPin, Phone, Plus, Search, User, X } from 'lucide-react';
 import React, { useState } from 'react';
 import {
-    ActivityIndicator,
-    FlatList,
-    Modal,
-    Pressable,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  Modal,
+  Pressable,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from 'react-native';
+import { useAuth } from '../../lib/auth';
 import { GradientCard } from '../../lib/components/GradientCard';
 import { Colors } from '../../lib/constants/colors';
 import { useStaffData } from '../../lib/pages/useStaffData';
 
 export default function EmployeesPage() {
   const { staff, loading, error } = useStaffData();
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [newEmployee, setNewEmployee] = useState({
@@ -27,7 +29,8 @@ export default function EmployeesPage() {
     email: '',
     phone: '',
     password: '',
-    location: ''
+    location: '',
+    role: 'staff'
   });
 
   const filteredStaff = staff?.filter(employee =>
@@ -36,16 +39,49 @@ export default function EmployeesPage() {
       .includes(searchQuery.toLowerCase())
   ) || [];
 
-  const handleAddEmployee = async () => {
-    try {
-      console.log("Adding new employee:", newEmployee);
-      // API call implementation here
-      setNewEmployee({ first_name: '', last_name: '', email: '', phone: '', password: '', location: '' });
-      setShowAddModal(false);
-    } catch (err) {
-      console.error("Error adding employee:", err);
+const handleAddEmployee = async () => {
+  try {
+    console.log("Adding new employee:", newEmployee);
+    
+    const backendUrl = process.env.REACT_APP_BACKEND_URL || 'http://localhost:3001';
+    const response = await fetch(`${backendUrl}/api/staff`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${user?.token || ''}`,
+      },
+      body: JSON.stringify({
+        first_name: newEmployee.first_name,
+        last_name: newEmployee.last_name,
+        email: newEmployee.email,
+        password: newEmployee.password,
+        phone: newEmployee.phone,
+        location: newEmployee.location,
+        role: newEmployee.role
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to add employee');
     }
-  };
+
+    const result = await response.json();
+    console.log("Employee added successfully:", result);
+    
+    // Reset form and close modal
+    setNewEmployee({ first_name: '', last_name: '', email: '', phone: '', password: '', location: '', role: 'staff'});
+    setShowAddModal(false);
+    
+    // Refresh the staff list
+    // You might want to add a refetch function to your useStaffData hook
+    window.location.reload(); // Simple refresh for now
+    
+  } catch (err) {
+    console.error("Error adding employee:", err);
+    alert(`Error adding employee:`);
+  }
+};
 
   if (loading) {
     return (
@@ -201,15 +237,15 @@ export default function EmployeesPage() {
               </View>
 
               <View>
-                <Text className="text-gray-400 text-sm mb-2">Password</Text>
+                <Text className="text-gray-400 text-sm mb-2">Role</Text>
                 <View className="relative">
                   <Lock size={18} color="#6b7280" className="absolute left-3 top-3 z-10" />
                   <TextInput
-                    placeholder="Password"
+                    placeholder="Staff"
                     placeholderTextColor="#6b7280"
-                    value={newEmployee.password}
-                    onChangeText={(v) => setNewEmployee({ ...newEmployee, password: v })}
-                    secureTextEntry
+                    value={newEmployee.role}
+                    onChangeText={(v) => setNewEmployee({ ...newEmployee, role: v })}
+                    // secureTextEntry
                     className="bg-gray-700 text-white p-3 pl-10 rounded-lg border border-gray-600"
                   />
                 </View>

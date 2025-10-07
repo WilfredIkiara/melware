@@ -72,6 +72,73 @@ exports.getAllClients = async (req, res) => {
 //     res.status(500).json({ success: false, message: 'Internal server error' });
 //   }
 // };
+// @desc    Create a new client
+// @route   POST /api/clients
+exports.createClient = async (req, res) => {
+  try {
+    const { first_name, last_name, email, phone_number, address, licence_plate, registration_make } = req.body;
+
+    // Validate required fields
+    if (!first_name || !last_name || !email) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: first_name, last_name, email' 
+      });
+    }
+
+    // Check if client with email already exists
+    const { data: existingClient, error: checkError } = await supabase
+      .from('clients')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (existingClient) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'A client with this email already exists' 
+      });
+    }
+
+    // Create new client
+    const { data: newClient, error } = await supabase
+      .from('clients')
+      .insert({
+        first_name,
+        last_name,
+        email,
+        phone_number: phone_number || null,
+        address: address || null,
+        licence_plate: licence_plate || null,
+        registration_make: registration_make || null,
+        total_spent: 0
+      })
+      .select('id, first_name, last_name, email, phone_number, total_spent, created_at')
+      .single();
+
+    if (error) {
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(400).json({ 
+          success: false, 
+          message: 'A client with this email already exists' 
+        });
+      }
+      throw error;
+    }
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Client created successfully', 
+      client: newClient 
+    });
+  } catch (error) {
+    console.error('Error creating client:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
+  }
+};
 exports.getClientDetails = async (req, res) => {
   try {
     const { id } = req.params;

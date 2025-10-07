@@ -48,34 +48,53 @@ exports.getStaffById = async (req, res) => {
 // @route   POST /api/staff
 exports.createStaff = async (req, res) => {
   try {
-    // Using first_name and last_name as per your schema
-    const { first_name, last_name, email, password, phone, location } = req.body;
+    const { first_name, last_name, email, password, phone, location , role} = req.body;
 
     // Validate required fields
     if (!first_name || !last_name || !email || !password) {
-      return res.status(400).json({ success: false, message: 'Missing required fields: first_name, last_name, email, password' });
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Missing required fields: first_name, last_name, email, password' 
+      });
     }
 
     const { data: newStaff, error } = await supabase
-      .from('staff') // Correct table name
+      .from('staff')
       .insert({
         first_name,
         last_name,
         email,
-        password,
-        phone,
-        location,
-        role: 'staff' // Setting the default role as per the schema
+        // password, // Note: You should hash this password!
+        phone: phone || null,
+        location: location || null,
+        role: role || 'staff',
+        services_offered: [], // Default empty array
+        current_clients: [] // Default empty array
       })
-      .select('staff_id, first_name, last_name, email, role') // Select specific columns
+      .select('staff_id, first_name, last_name, email, phone, location')
       .single();
 
-    if (error) throw error;
+    if (error) {
+      if (error.code === '23505') { // Unique constraint violation
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Email already exists' 
+        });
+      }
+      throw error;
+    }
 
-    res.status(201).json({ success: true, message: 'Staff member created successfully', staff: newStaff });
+    res.status(201).json({ 
+      success: true, 
+      message: 'Staff member created successfully', 
+      staff: newStaff 
+    });
   } catch (error) {
     console.error('Error creating staff member:', error);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(500).json({ 
+      success: false, 
+      message: 'Internal server error' 
+    });
   }
 };
 

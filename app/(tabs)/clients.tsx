@@ -258,6 +258,7 @@ import { RotateCcw, Search, UserPlus } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   Dimensions,
   FlatList,
   Modal,
@@ -267,9 +268,11 @@ import {
   useWindowDimensions,
   View,
 } from 'react-native';
+import { useAuth } from '../../lib/auth';
 import { GradientCard } from '../../lib/components/GradientCard';
 import { Colors } from '../../lib/constants/colors';
 import { useClientData } from '../../lib/pages/clientData';
+
 
 interface Customer {
   id: string;
@@ -295,7 +298,8 @@ export default function Clients() {
     email: '',
     phone_number: '',
   });
-
+  const { user } = useAuth();
+  const { createClient } = useClientData();
   // Responsive sizing functions
   const getResponsiveFontSize = (baseSize: number) => {
     const scaleFactor = Math.min(width / 375, 1.2); // Base width 375 (iPhone 6/7/8)
@@ -350,16 +354,31 @@ export default function Clients() {
     );
   }, [clients, searchQuery]);
 
-  const handleAddClient = async () => {
-    try {
-      console.log("Adding new client:", newClient);
-      // API call implementation here
-      setNewClient({ first_name: '', last_name: '', email: '', phone_number: '' });
-      setShowAddModal(false);
-    } catch (err) {
-      console.error("Error adding client:", err);
+const handleAddClient = async () => {
+  try {
+    if (!newClient.first_name || !newClient.last_name || !newClient.email) {
+      Alert.alert('Error', 'Please fill in all required fields: First Name, Last Name, and Email');
+      return;
     }
-  };
+
+    await createClient({
+      first_name: newClient.first_name,
+      last_name: newClient.last_name,
+      email: newClient.email,
+      phone_number: newClient.phone_number
+    });
+
+    // Reset form and close modal
+    setNewClient({ first_name: '', last_name: '', email: '', phone_number: '' });
+    setShowAddModal(false);
+    
+    Alert.alert('Success', 'Client added successfully!');
+    
+  } catch (err: any) {
+    console.error("Error adding client:", err);
+    Alert.alert('Error', `Failed to add client: ${err.message}`);
+  }
+};
 
   // Responsive styles
   const responsiveStyles = {

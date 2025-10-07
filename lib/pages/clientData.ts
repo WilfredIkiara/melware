@@ -736,7 +736,24 @@ export function useClientData() {
       setLoading(false);
     }
   }, []);
-
+const createClient = useCallback(async (clientData: any) => {
+  setLoading(true);
+  setError(null);
+  try {
+    const data = await apiService.post('/api/clients', clientData);
+    
+    // Refresh the clients list
+    await fetchClients();
+    
+    return data.client;
+  } catch (err) {
+    console.error('Error creating client:', err);
+    setError('Failed to create client.');
+    throw err;
+  } finally {
+    setLoading(false);
+  }
+}, [fetchClients]);
   return {
     clients,
     clientDetails,
@@ -752,6 +769,7 @@ export function useClientData() {
     updateClientVehicle,
     addClientVehicle,
     addClientService,
+    createClient,
   };
 }
 

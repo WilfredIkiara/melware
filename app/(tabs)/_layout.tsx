@@ -733,7 +733,7 @@ export default function TabsLayout() {
   const isDesktop = width >= 768;
 
   const allNavOptions: NavItem[] = useMemo(() => [
-    { name: 'dashboard', title: 'Dashboard', iconName: 'home', roles: ['super-admin', 'admin', 'operator'] },
+    { name: 'dashboard', title: 'Dashboard', iconName: 'home', roles: [] },
     { name: 'superadmin', title: 'Superadmin', iconName: 'shield', roles: ['super-admin'] },
     { name: 'operator', title: 'Operator', iconName: 'construct', roles: ['operator'] },
     { name: 'clients', title: 'Clients', iconName: 'people', roles: ['super-admin', 'admin', 'operator'] },

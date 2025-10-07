@@ -226,20 +226,43 @@ const handleCustomerPress = (customer: CustomerData) => {
   };
 
   // Helper to get flat customers array for display
-  const getCustomersForDisplay = () => {
-    if (!customers) return [];
-    if (Array.isArray(customers)) {
-      return customers;
-    } else {
-      // Combine all customer arrays from nested structure
-      return [
-        ...(customers.topCustomers || []),
-        ...(customers.newCustomersThisWeek || []),
-        ...(customers.outstandingBalances || [])
-      ];
-    }
-  };
-
+  // const getCustomersForDisplay = () => {
+  //   if (!customers) return [];
+  //   if (Array.isArray(customers)) {
+  //     return customers;
+  //   } else {
+  //     // Combine all customer arrays from nested structure
+  //     return [
+  //       ...(customers.topCustomers || []),
+  //       ...(customers.newCustomersThisWeek || []),
+  //       ...(customers.outstandingBalances || [])
+  //     ];
+  //   }
+  // };
+const getCustomersForDisplay = () => {
+  if (!customers) return [];
+  
+  if (Array.isArray(customers)) {
+    return customers;
+  } else {
+    // Combine all customer arrays and remove duplicates based on customer ID
+    const allCustomers = [
+      ...(customers.topCustomers || []),
+      ...(customers.newCustomersThisWeek || []),
+      ...(customers.outstandingBalances || [])
+    ];
+    
+    // Remove duplicates using a Set based on customer ID
+    const uniqueCustomers = allCustomers.filter((customer, index, self) => {
+      const customerId = customer.id || customer.client_id;
+      return index === self.findIndex(c => 
+        (c.id || c.client_id) === customerId
+      );
+    });
+    
+    return uniqueCustomers;
+  }
+};
   if (loading) {
     return <View className="flex-1 justify-center items-center bg-[#1A2033]"><Text className="text-white text-2xl">Loading...</Text></View>;
   }

@@ -130,11 +130,11 @@ interface DashboardStats {
 interface Activity {
   id: string;
   profile_id: string;
-  profiles?: { first_name: string }; // Changed from 'profile' to 'profiles'
+  profiles?: { first_name: string }; 
   activity_type: string;
   description: string;
   timestamp: string;
-  route?: string; // Add this if you want to show the route
+  route?: string; 
 }
 interface WorkOrder {
   id: string;
@@ -181,6 +181,8 @@ interface PayrollEntry {
 }
 
 interface CustomerData {
+  client_id: any;
+  id: any;
   first_name: string;
   last_name: string;
   total_spent?: number;
